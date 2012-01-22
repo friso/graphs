@@ -1,5 +1,6 @@
 package nl.waredingen.graphs;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -7,6 +8,10 @@ import java.util.Properties;
 
 import nl.waredingen.graphs.IterateJob.MaxPartitionToAdjacencyList.Context;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.StringUtils;
 
 import cascading.flow.Flow;
@@ -33,36 +38,78 @@ import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
 public class IterateJob {
-	public static int run(String input, String output) {
-		Scheme sourceScheme = new TextDelimited(new Fields("partition", "source", "list"), "\t");
-		Tap source = new Hfs(sourceScheme, input);
+	private static final Log log = LogFactory.getLog(IterateJob.class);
+	
+	public static int run(String input, String output, int maxIterations) {
+		log.info("Starting iterative graph partitioning.");
 		
-		Scheme sinkScheme = new TextDelimited(new Fields("partition", "source", "list"), "\t");
-		Tap sink = new Hfs(sinkScheme, output, SinkMode.REPLACE);
-		
-		Pipe iteration = new Pipe("iteration");
-		iteration = new Each(iteration, new FanOut());
-		iteration = new GroupBy(iteration, new Fields("node"), new Fields("partition"), true);
-		iteration = new Every(iteration, new MaxPartitionToTuples(), Fields.RESULTS);
-		
-		iteration = new GroupBy(iteration, new Fields("source"), new Fields("partition"), true);
-		iteration = new Every(iteration, new MaxPartitionToAdjacencyList(), Fields.RESULTS);
-		
-		Properties properties = new Properties();
-		FlowConnector.setApplicationJarClass(properties, PrepareJob.class);
-		
-		FlowConnector flowConnector = new FlowConnector(properties);
-		Flow flow = flowConnector.connect("iteration", source, sink, iteration);
-		
-		flow.writeDOT("flow.dot");
-		
-		flow.complete();
+		boolean done = false;
+		int iterationCount = 0;
+		while (!done) {
+			log.info("Running iteration " + iterationCount + " of graph partitioning.");
+			
+			String currentIterationInputPath = iterationCount == 0 ? input :  output + ".iteration." + Integer.toString((iterationCount - 1) % 2);
+			Scheme sourceScheme = new TextDelimited(new Fields("partition", "source", "list"), "\t");
+			Tap source = new Hfs(sourceScheme, currentIterationInputPath);
+			
+			Scheme sinkScheme = new TextDelimited(new Fields("partition", "source", "list"), "\t");
+			String currentIterationOutputPath = output + ".iteration." + Integer.toString(iterationCount % 2);
+			Tap sink = new Hfs(sinkScheme, currentIterationOutputPath, SinkMode.REPLACE);
+			
+			Pipe iteration = new Pipe("iteration");
+			iteration = new Each(iteration, new FanOut());
+			iteration = new GroupBy(iteration, new Fields("node"), new Fields("partition"), true);
+			iteration = new Every(iteration, new MaxPartitionToTuples(), Fields.RESULTS);
+			
+			iteration = new GroupBy(iteration, new Fields("source"), new Fields("partition"), true);
+			iteration = new Every(iteration, new MaxPartitionToAdjacencyList(), Fields.RESULTS);
+			
+			Properties properties = new Properties();
+			FlowConnector.setApplicationJarClass(properties, PrepareJob.class);
+			
+			FlowConnector flowConnector = new FlowConnector(properties);
+			Flow flow = flowConnector.connect("iteration", source, sink, iteration);
+			
+			flow.writeDOT("flow.dot");
+			
+			flow.complete();
+			
+			long updatedPartitions = flow.getFlowStats().getCounterValue(MaxPartitionToAdjacencyList.COUNTER_GROUP, MaxPartitionToAdjacencyList.PARTITIONS_UPDATES_COUNTER_NAME);
+			done = updatedPartitions == 0 || iterationCount == maxIterations - 1;
+			
+			log.info("Updated " + updatedPartitions + " during iteration " + iterationCount + ". " + (done ? "Done." : "Doing another iteration."));
+			
+			if (done) {
+				FileSystem fs = null;
+				try {
+					log.info("Moving result into place and deleting intermediate iteration result.");
+					fs = FileSystem.get(flow.getJobConf());
+					fs.rename(new Path(currentIterationOutputPath), new Path(output));
+				} catch (IOException e) {
+					log.fatal("Could not move result into place. Error occured.", e);
+					return 1;
+				} finally {
+					if (fs != null && iterationCount > 0) {
+						try {
+							fs.delete(new Path(currentIterationInputPath), true);
+						} catch (IOException e) {
+							log.warn("Could delete intermediate iteration result. Error occured.", e);
+						}
+					}
+				}
+			}
+			
+			iterationCount++;
+		}
 		
 		return 0;
 	}
 	
 	@SuppressWarnings("serial")
 	public static class MaxPartitionToAdjacencyList extends BaseOperation<Context> implements Aggregator<Context> {
+		public static final String PARTITIONS_UPDATES_COUNTER_NAME = "Partitions updates";
+		public static final String COUNTER_GROUP = "graphs";
+
 		public MaxPartitionToAdjacencyList() {
 			super(new Fields("partition", "source", "list"));
 		}
@@ -88,8 +135,11 @@ public class IterateJob {
 		public void aggregate(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
 			Context context = aggregatorCall.getContext();
 			TupleEntry arguments = aggregatorCall.getArguments();
+			int partition = arguments.getInteger("partition");
 			if (context.partition == -1) {
-				context.partition = arguments.getInteger("partition");
+				context.partition = partition;
+			} else if (context.partition > partition) {
+				flowProcess.increment(COUNTER_GROUP, PARTITIONS_UPDATES_COUNTER_NAME, 1);
 			}
 			
 			int node = arguments.getInteger("node");

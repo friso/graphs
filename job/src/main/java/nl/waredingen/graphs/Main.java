@@ -8,10 +8,10 @@ public class Main extends Configured implements Tool {
 
 	@Override
 	public int run(String[] args) throws Exception {
-		if (args[0].equalsIgnoreCase("enrich")) {
-			return EnrichJob.run(args[1], args[2]);
+		if (args[0].equalsIgnoreCase("prepare")) {
+			return PrepareJob.run(args[1], args[2]);
 		} else if (args[0].equalsIgnoreCase("iterate")) {
-			return IterateJob.run(Integer.parseInt(args[1]), args[2], args[3]);
+			return IterateJob.run(args[1], args[2]);
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

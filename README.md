@@ -38,12 +38,12 @@ It will produce:
 There are two partitioning implementations. One takes a disconnected graph and finds all partitions. The other (called 'with-flags'), will take a possibly connected graph and partition the graph by adding partition boundaries at nodes with a incoming edge count larger than a given threshold.
 
 Both of the implementations consist of a prepare step and a iterative step. The Java code has a main (`nl.waredingen.graphs.Main`) class that is intented to be run using Hadoop (with `hadoop jar`). It takes one of six argument lists:
-- prepare [input] [output]
-- iterate [input] [output]
-- iterate-once [input] [output]
-- prepare-with-flags [input] [output] [threshold]
-- iterate-with-flags [input] [output]
-- iterate-once-with-flags [input] [output]
+* prepare [input] [output]
+* iterate [input] [output]
+* iterate-once [input] [output]
+* prepare-with-flags [input] [output] [threshold]
+* iterate-with-flags [input] [output]
+* iterate-once-with-flags [input] [output]
 
 The prepare steps take an input file as described above and turn it into a file that can be fed to the iterative step. This file is the same format as the output file. The iterate-once arguments will perform a single iteration of the partitioning algorithm. The iterate variant will run the iterative step until it converges.
 

@@ -1,5 +1,5 @@
 # Graph Partitioning in Cascading
-This is a Hadoop MapReduce based implementation of graph partitioning. The Hadoop code is written using [Cascading](http://www.cascading.org/ "Cascading").
+This is a Hadoop MapReduce based implementation of graph partitioning. The MapReduce code is written using [Cascading](http://www.cascading.org/ "Cascading").
 
 ## Input and output
 The program takes a graph as input represented as a text file. Each line of the file must contain a single edge of the graph in the form of `source,target`, where source and target are numeric node IDs. Example:
@@ -30,7 +30,7 @@ The output of the program will the same graph represented as source nodes with a
 4,6
 ```
 
-It will produce (columns are: partitiond ID \<tab\> source node ID \<tab\> adjacency list):
+It will produce (columns are: partition ID \<tab\> source node ID \<tab\> adjacency list):
 
 ```
 2	0	1,2

@@ -2,7 +2,7 @@
 This is a Hadoop MapReduce based implementation of graph partitioning. The Hadoop code is written using [Cascading](http://www.cascading.org/ "Cascading").
 
 ## Input and output
-The program takes a graph as input represented as a text file. Each line of the file must contain a single edge of the graph in the form of *source,target*, where source and target are numeric node IDs. Example:
+The program takes a graph as input represented as a text file. Each line of the file must contain a single edge of the graph in the form of `source,target`, where source and target are numeric node IDs. Example:
 
 ```
 0,1

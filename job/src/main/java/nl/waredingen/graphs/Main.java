@@ -14,8 +14,12 @@ public class Main extends Configured implements Tool {
 			return IterateJob.run(args[1], args[2], Integer.MAX_VALUE);
 		} else if (args[0].equalsIgnoreCase("iterate-once")) {
 			return IterateJob.run(args[1], args[2], 1);
-		} else if (args[0].equalsIgnoreCase("count")) {
-			return CountJob.run(args[1], args[2]);
+		} else if (args[0].equalsIgnoreCase("prepare-with-flags")) {
+			return PrepareWithFlagsJob.run(args[1], args[2], Integer.parseInt(args[3]));
+		} else if (args[0].equalsIgnoreCase("iterate-with-flags")) {
+			return IterateWithFlagsJob.run(args[1], args[2], Integer.MAX_VALUE);
+		} else if (args[0].equalsIgnoreCase("iterate-once-with-flags")) {
+			return IterateWithFlagsJob.run(args[1], args[2], 1);
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import nl.waredingen.graphs.CountJob.ToAdjacencyList.Context;
-
 import org.apache.hadoop.util.StringUtils;
 
 import cascading.flow.Flow;
@@ -30,12 +28,12 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
-public class CountJob {
-	public static int run(String input, String output) {
+public class PrepareWithFlagsJob {
+	public static int run(String input, String output, int incomingEdgeThreshold) {
 		Scheme sourceScheme = new TextDelimited(new Fields("source", "target"), ",");
 		Tap source = new Hfs(sourceScheme, input);
 		
-		Scheme sinkScheme = new TextDelimited(new Fields("partition", "source", "list", "counts"), "\t");
+		Scheme sinkScheme = new TextDelimited(new Fields("partition", "source", "list", "flags"), "\t");
 		Tap sink = new Hfs(sinkScheme, output, SinkMode.REPLACE);
 		
 		Pipe original = new Pipe("prepare");
@@ -45,11 +43,11 @@ public class CountJob {
 		
 		Pipe joined = new CoGroup(original, new Fields("target"), counts, new Fields("target"), new Fields("source", "target", "target1", "count"));
 		joined = new Each(joined, new Identity(Integer.TYPE, Integer.TYPE, Integer.TYPE, Long.TYPE));
-		joined = new GroupBy(joined, new Fields("source"), new Fields("target"), true);
-		joined = new Every(joined, new ToAdjacencyList(), Fields.RESULTS);
+		joined = new GroupBy(joined, new Fields("source"));
+		joined = new Every(joined, new ToAdjacencyList(incomingEdgeThreshold), Fields.RESULTS);
 		
 		Properties properties = new Properties();
-		FlowConnector.setApplicationJarClass(properties, PrepareJob.class);
+		FlowConnector.setApplicationJarClass(properties, PrepareWithFlagsJob.class);
 		
 		FlowConnector flowConnector = new FlowConnector(properties);
 		Flow flow = flowConnector.connect(source, sink, joined);
@@ -61,45 +59,54 @@ public class CountJob {
 		return 0;
 	}
 	
+	private static class ToAdjacencyListContext {
+		int source;
+		int partition = -1;
+		List<Integer> targets = new ArrayList<Integer>();
+		List<Byte> flags = new ArrayList<Byte>();
+	}
+	
 	@SuppressWarnings("serial")
-	public static class ToAdjacencyList extends BaseOperation<Context> implements Aggregator<Context> {
-		public ToAdjacencyList() {
-			super(new Fields("partition", "source", "list", "counts"));
-		}
+	private static class ToAdjacencyList extends BaseOperation<ToAdjacencyListContext> implements Aggregator<ToAdjacencyListContext> {
+		private int threshold;
 		
-		public static class Context {
-			int source;
-			int partition = -1;
-			List<Integer> targets = new ArrayList<Integer>();
-			List<Long> counts = new ArrayList<Long>();
+		public ToAdjacencyList(int threshold) {
+			super(new Fields("partition", "source", "list", "flags"));
+			this.threshold = threshold;
 		}
 
 		@Override
-		public void start(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
-			Context context = new Context();
+		public void start(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
+			ToAdjacencyListContext context = new ToAdjacencyListContext();
 			context.source = aggregatorCall.getGroup().getInteger("source");
 			aggregatorCall.setContext(context);
 		}
 
 		@Override
-		public void aggregate(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
-			Context context = aggregatorCall.getContext();
-			
+		public void aggregate(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
+			ToAdjacencyListContext context = aggregatorCall.getContext();
 			TupleEntry arguments = aggregatorCall.getArguments();
-			int target = arguments.getInteger("target");
-			if (context.partition == -1) {
-				context.partition = target > context.source ? target : context.source;
-			}
-			context.targets.add(target);
 			
-			long count = arguments.getLong("count");
-			context.counts.add(count);
+			int count = arguments.getInteger("count");
+			byte flag = (byte) (count > threshold ? 0 : 1);
+			int target = arguments.getInteger("target");
+			
+			if (flag == (byte) 1 && target > context.partition) {
+				context.partition = target;
+			}
+			
+			context.targets.add(target);
+			context.flags.add(flag);
 		}
 
 		@Override
-		public void complete(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
-			Context context = aggregatorCall.getContext();
-			Tuple result = new Tuple(context.partition, context.source, StringUtils.joinObjects(",", context.targets), StringUtils.joinObjects(",", context.counts));
+		public void complete(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
+			ToAdjacencyListContext context = aggregatorCall.getContext();
+			if (context.source > context.partition) {
+				context.partition = context.source;
+			}
+			
+			Tuple result = new Tuple(context.partition, context.source, StringUtils.joinObjects(",", context.targets), StringUtils.joinObjects(",", context.flags));
 			aggregatorCall.getOutputCollector().add(result);
 		}
 	}

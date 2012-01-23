@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import nl.waredingen.graphs.PrepareJob.ToAdjacencyList.Context;
-
 import org.apache.hadoop.util.StringUtils;
 
 import cascading.flow.Flow;
@@ -55,28 +53,28 @@ public class PrepareJob {
 		return 0;
 	}
 	
+	private static class ToAdjacencyListContext {
+		int source;
+		int partition = -1;
+		List<Integer> targets = new ArrayList<Integer>();
+	}
+	
 	@SuppressWarnings("serial")
-	public static class ToAdjacencyList extends BaseOperation<Context> implements Aggregator<Context> {
+	private static class ToAdjacencyList extends BaseOperation<ToAdjacencyListContext> implements Aggregator<ToAdjacencyListContext> {
 		public ToAdjacencyList() {
 			super(new Fields("partition", "source", "list"));
 		}
 		
-		public static class Context {
-			int source;
-			int partition = -1;
-			List<Integer> targets = new ArrayList<Integer>();
-		}
-
 		@Override
-		public void start(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
-			Context context = new Context();
+		public void start(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
+			ToAdjacencyListContext context = new ToAdjacencyListContext();
 			context.source = aggregatorCall.getGroup().getInteger("source");
 			aggregatorCall.setContext(context);
 		}
 
 		@Override
-		public void aggregate(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
-			Context context = aggregatorCall.getContext();
+		public void aggregate(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
+			ToAdjacencyListContext context = aggregatorCall.getContext();
 			
 			TupleEntry arguments = aggregatorCall.getArguments();
 			int target = arguments.getInteger("target");
@@ -87,8 +85,8 @@ public class PrepareJob {
 		}
 
 		@Override
-		public void complete(FlowProcess flowProcess, AggregatorCall<Context> aggregatorCall) {
-			Context context = aggregatorCall.getContext();
+		public void complete(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
+			ToAdjacencyListContext context = aggregatorCall.getContext();
 			Tuple result = new Tuple(context.partition, context.source, StringUtils.joinObjects(",", context.targets));
 			aggregatorCall.getOutputCollector().add(result);
 		}

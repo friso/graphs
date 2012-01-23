@@ -20,7 +20,7 @@ The above represents the graph:
 2 ------ 3
 ```
 
-The output of the program will the same graph represented as source nodes with adjacency lists prefixed with a partition ID seperated by tabs. So that is: `partition ID	source node ID	adjacency list`. The partition IDs are derived from the node IDs. Each partition gets assigned the largest node ID that exists within that partition. For the following input:
+The output of the program will the same graph represented as source nodes with adjacency lists prefixed with a partition ID seperated by tabs. The partition IDs are derived from the node IDs. Each partition gets assigned the largest node ID that exists within that partition. For the following input:
 
 ```
 0,1
@@ -30,7 +30,7 @@ The output of the program will the same graph represented as source nodes with a
 4,6
 ```
 
-It will produce:
+It will produce (columns are: partitiond ID \<tab\> source node ID \<tab\> adjacency list):
 
 ```
 2	0	1,2

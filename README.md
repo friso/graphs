@@ -12,28 +12,31 @@ The program takes a graph as input represented as a text file. Each line of the 
 ```
 
 The above represents the graph:
-<pre>
-0 -- 1
+
+```
+0 --- 1
 |      \
 |       \
 2 ------ 3
-</pre>
+```
 
 The output of the program will the same graph represented as source nodes with adjacency lists prefixed with a partition ID seperated by tabs. The partition IDs are derived from the node IDs. Each partition gets assigned the largest node ID that exists within that partition. For the following input:
-<pre>
+
+```
 0,1
 0,2
 1,2
 4,5
 4,6
-</pre>
+```
 
 It will produce:
-<pre>
+
+```
 2	0	1,2
 2	1	2
 6	4	5,6
-</pre>
+```
 
 ## Running
 There are two partitioning implementations. One takes a disconnected graph and finds all partitions. The other (called 'with-flags'), will take a possibly connected graph and partition the graph by adding partition boundaries at nodes with a incoming edge count larger than a given threshold.

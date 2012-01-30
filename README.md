@@ -53,4 +53,4 @@ Both of the implementations consist of a prepare step and a iterative step. The 
 The prepare steps take an input file as described above and turn it into a file that can be fed to the iterative step. This file is the same format as the output file. The iterate-once arguments will perform a single iteration of the partitioning algorithm. The iterate variant will run the iterative step until it converges.
 
 ## More information
-This code is companion to a blog post. It's not written yet. The readme will be updated once it is...
+This code is companion to a blog post. First part is here: http://waredingen.nl/graph-partitioning-in-mapreduce-with-cascadin

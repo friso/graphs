@@ -45,24 +45,23 @@ object Main {
   def iterate(nodes: DList[Node], maxIterations: Int): DList[Node] = {
     val nodesAfterOneIteration = 
       nodes
-        .flatMap { node => 
-          Edge(node.source, node.source, node.partition) :: node.targets.map(target => Edge(node.source, target, node.partition)).toList
+        .flatMap { node =>
+          val srcEdge = Edge(node.source, node.source, node.partition)
+          val targetEdges = node.targets.map(target => Edge(node.source, target, node.partition)).toList
+          
+          srcEdge :: targetEdges
         }
         .groupBy(_.target)
         .flatMap {
-          case (target, edges) => {
-            val largestPartition = edges.map(_.partition).max
-            
-            edges.map(edge => Edge(edge.source, edge.target, largestPartition))
-          }
+          case (target, edges) => edges.map(edge => Edge(edge.source, edge.target, edges.map(_.partition).max))
         }
         .groupBy(_.source)
         .map {
-          case (source, edges) => {
-            val largestPartition = edges.map(_.partition).max
-            
-            Node(source, largestPartition, edges.map(_.target).filterNot(_ == source).toList.distinct)
-          }
+          case (source, edges) => Node(
+            source, 
+            edges.map(_.partition).max, 
+            edges.map(_.target).filterNot(_ == source).toList.distinct
+          )
         }
     
     if (maxIterations > 1) iterate(nodesAfterOneIteration, maxIterations - 1)

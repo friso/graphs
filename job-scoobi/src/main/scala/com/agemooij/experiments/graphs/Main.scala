@@ -14,7 +14,7 @@ object Main {
     // Read some config info from the command line arguments
     val (inputFile, outputPath) = args.toList match {
       case in :: out :: _ => (in, out)
-      case _ => throw new IllegalArgumentException("Invalid arguments to main. Expected an input file and an outpur file.")
+      case _ => throw new IllegalArgumentException("Invalid arguments to main. Expected an input file and an output path.")
     }
     
     // read the original edges into a DList[(Int, Int)]
@@ -51,7 +51,7 @@ object Main {
         .groupBy(_.target)
         .flatMap {
           case (target, edges) => {
-            val largestPartition = edges.map(_.partition).toList.sorted(IntOrdering.reverse).head
+            val largestPartition = edges.map(_.partition).max
             
             edges.map(edge => Edge(edge.source, edge.target, largestPartition))
           }
@@ -59,7 +59,7 @@ object Main {
         .groupBy(_.source)
         .map {
           case (source, edges) => {
-            val largestPartition = edges.map(_.partition).toList.sorted(IntOrdering.reverse).head
+            val largestPartition = edges.map(_.partition).max
             
             Node(source, largestPartition, edges.map(_.target).filterNot(_ == source).toList.distinct)
           }

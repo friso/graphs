@@ -1,5 +1,10 @@
 package nl.waredingen.graphs;
 
+import nl.waredingen.graphs.partition.IterateJob;
+import nl.waredingen.graphs.partition.IterateWithFlagsJob;
+import nl.waredingen.graphs.partition.PrepareJob;
+import nl.waredingen.graphs.partition.PrepareWithFlagsJob;
+
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;

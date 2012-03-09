@@ -1,4 +1,4 @@
-package nl.waredingen.graphs;
+package nl.waredingen.graphs.partition;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,8 +35,8 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
-public class IterateJob {
-	private static final Log log = LogFactory.getLog(IterateJob.class);
+public class IterateWithFlagsJob {
+	private static final Log log = LogFactory.getLog(IterateWithFlagsJob.class);
 	
 	public static int run(String input, String output, int maxIterations) {
 		log.info("Starting iterative graph partitioning.");
@@ -47,19 +47,19 @@ public class IterateJob {
 			log.info("Running iteration " + iterationCount + " of graph partitioning.");
 			
 			String currentIterationInputPath = iterationCount == 0 ? input :  output + ".iteration." + Integer.toString((iterationCount - 1) % 2);
-			Scheme sourceScheme = new TextDelimited(new Fields("partition", "source", "list"), "\t");
+			Scheme sourceScheme = new TextDelimited(new Fields("partition", "source", "list", "flags"), "\t");
 			Tap source = new Hfs(sourceScheme, currentIterationInputPath);
 			
-			Scheme sinkScheme = new TextDelimited(new Fields("partition", "source", "list"), "\t");
+			Scheme sinkScheme = new TextDelimited(new Fields("partition", "source", "list", "flags"), "\t");
 			String currentIterationOutputPath = output + ".iteration." + Integer.toString(iterationCount % 2);
 			Tap sink = new Hfs(sinkScheme, currentIterationOutputPath, SinkMode.REPLACE);
 			
 			Pipe iteration = new Pipe("iteration");
 			iteration = new Each(iteration, new FanOut());
-			iteration = new GroupBy(iteration, new Fields("node"), new Fields("partition"), true);
+			iteration = new GroupBy(iteration, new Fields("node"), new Fields("flag", "partition"), true);
 			iteration = new Every(iteration, new MaxPartitionToTuples(), Fields.RESULTS);
 			
-			iteration = new GroupBy(iteration, new Fields("source"), new Fields("partition"), true);
+			iteration = new GroupBy(iteration, new Fields("source"), new Fields("flag", "partition"), true);
 			iteration = new Every(iteration, new MaxPartitionToAdjacencyList(), Fields.RESULTS);
 			
 			Properties properties = new Properties();
@@ -107,9 +107,11 @@ public class IterateJob {
 		int source;
 		int partition = -1;
 		List<Integer> targets;
+		List<Byte> flags;
 		
 		public MaxPartitionToAdjacencyListContext() {
 			this.targets = new ArrayList<Integer>();
+			this.flags = new ArrayList<Byte>();
 		}
 	}
 	
@@ -119,7 +121,7 @@ public class IterateJob {
 		public static final String COUNTER_GROUP = "graphs";
 
 		public MaxPartitionToAdjacencyList() {
-			super(new Fields("partition", "source", "list"));
+			super(new Fields("partition", "source", "list", "flags"));
 		}
 		
 		@Override
@@ -133,23 +135,29 @@ public class IterateJob {
 		public void aggregate(FlowProcess flowProcess, AggregatorCall<MaxPartitionToAdjacencyListContext> aggregatorCall) {
 			MaxPartitionToAdjacencyListContext context = aggregatorCall.getContext();
 			TupleEntry arguments = aggregatorCall.getArguments();
-			int partition = arguments.getInteger("partition");
-			if (context.partition == -1) {
-				context.partition = partition;
-			} else if (context.partition > partition) {
-				flowProcess.increment(COUNTER_GROUP, PARTITIONS_UPDATES_COUNTER_NAME, 1);
-			}
 			
 			int node = arguments.getInteger("node");
+			int partition = arguments.getInteger("partition");
+			boolean flag = arguments.getBoolean("flag");
+			
+			if (context.partition == -1) {
+				context.partition = partition;
+			} else {
+				if (flag && context.partition > partition) {
+					flowProcess.increment(COUNTER_GROUP, PARTITIONS_UPDATES_COUNTER_NAME, 1);
+				}
+			}
+			
 			if (node != context.source) {
 				context.targets.add(node);
+				context.flags.add((byte) (flag ? 1 : 0));
 			}
 		}
 
 		@Override
 		public void complete(FlowProcess flowProcess, AggregatorCall<MaxPartitionToAdjacencyListContext> aggregatorCall) {
 			MaxPartitionToAdjacencyListContext context = aggregatorCall.getContext();
-			Tuple result = new Tuple(context.partition, context.source, StringUtils.joinObjects(",", context.targets));
+			Tuple result = new Tuple(context.partition, context.source, StringUtils.joinObjects(",", context.targets), StringUtils.joinObjects(",", context.flags));
 			aggregatorCall.getOutputCollector().add(result);
 		}
 	}
@@ -157,7 +165,7 @@ public class IterateJob {
 	@SuppressWarnings({ "serial", "rawtypes", "unchecked" })
 	private  static class MaxPartitionToTuples extends BaseOperation implements Buffer {
 		public MaxPartitionToTuples() {
-			super(new Fields("partition", "node", "source"));
+			super(new Fields("partition", "node", "source", "flag"));
 		}
 		
 		@Override
@@ -177,7 +185,7 @@ public class IterateJob {
 		}
 
 		private void emitTuple(BufferCall bufferCall, int maxPartition, TupleEntry entry) {
-			Tuple result = new Tuple(maxPartition, entry.getInteger("node"), entry.getInteger("source"));
+			Tuple result = new Tuple(maxPartition, entry.getInteger("node"), entry.getInteger("source"), entry.getBoolean("flag"));
 			bufferCall.getOutputCollector().add(result);
 		}
 	}
@@ -185,7 +193,7 @@ public class IterateJob {
 	@SuppressWarnings({ "serial", "rawtypes" })
 	private static class FanOut extends BaseOperation implements Function {
 		public FanOut() {
-			super(3, new Fields("partition", "node", "source"));
+			super(new Fields("partition", "node", "source", "flag"));
 		}
 		
 		@Override
@@ -194,11 +202,13 @@ public class IterateJob {
 			int partition = args.getInteger("partition");
 			int source = args.getInteger("source");
 
-			Tuple result = new Tuple(partition, source, source);
+			Tuple result = new Tuple(partition, source, source, true);
 			functionCall.getOutputCollector().add(result);
 			
-			for (String node : args.getString("list").split(",")) {
-				result = new Tuple(partition, Integer.parseInt(node), source);
+			String[] nodeList = args.getString("list").split(",");
+			String[] flagList = args.getString("flags").split(",");
+			for (int c = 0; c < nodeList.length; c++) {
+				result = new Tuple(partition, Integer.parseInt(nodeList[c]), source, Integer.parseInt(flagList[c]) != 0);
 				functionCall.getOutputCollector().add(result);
 			}
 		}

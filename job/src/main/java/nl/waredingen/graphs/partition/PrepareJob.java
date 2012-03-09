@@ -1,4 +1,4 @@
-package nl.waredingen.graphs;
+package nl.waredingen.graphs.partition;
 
 import java.util.ArrayList;
 import java.util.List;

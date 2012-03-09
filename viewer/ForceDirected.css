@@ -9,10 +9,37 @@ span.close {
 	margin-left:3px;
 }
 
+span.add {
+	color:#55FF55;
+	cursor:pointer;
+	font-weight:bold;
+	margin-left:3px;
+}
+
+span.collapse {
+	color:lightblue;
+	cursor:pointer;
+	font-weight:bold;
+	margin-left:3px;
+}
+
+span.use {
+	color:yellow;
+	cursor:pointer;
+	font-weight:bold;
+	margin-left:3px;
+	vertical-align: sub;
+}
+
 span.name {
   cursor: pointer;
   font-size: 0.8em;
   color: #ddd;
+  text-align: center;
+}
+
+span.detailname {
+	color: orange;
 }
 
 /*TOOLTIPS*/
@@ -26,4 +53,21 @@ span.name {
   font-size: 11px;
   text-align:center;
   margin-bottom:2px;
+}
+
+table.props {
+	width: 98%;
+}
+th.props {
+	font-weight: bold;
+	text-decoration: underline;
+	text-transform: uppercase;
+}
+
+td.propkey {
+	vertical-align: top;
+	font-style: italic;
+}
+td.propvalue {
+	vertical-align: top;
 }

@@ -15,26 +15,161 @@
 <script language="javascript" type="text/javascript" src="jit-yc.js"></script>
 
 <!-- graph viz -->
+<script language="javascript" type="text/javascript" src="rest-api.js"></script>
+<script language="javascript" type="text/javascript" src="model.js"></script>
 <script language="javascript" type="text/javascript" src="graph.js"></script>
-<script language="javascript" type="text/javascript" src="populatedata.js"></script>
 
 </head>
 
-<body>
+<body onload="init()">
 
 <script language="javascript">
+var neoLocation
+var model
+var restApi
+var graph
+
+function init() {
+	neoLocation = 'http://localhost:7474/db/data'
+	restApi = new RestApi(neoLocation)
+	model = new Model(restApi)
+	graph = new Graph({
+		addButtonClicked: doAddButton,
+		closeButtonClicked: doCloseButton,
+		nameClicked: doNameClicked,
+		edgeClicked: doEdgeClicked,
+		useButtonClicked: doUseButtonClicked,
+		collapseButtonClicked: doCollapseButtonClicked
+	})
+}
+
+function doUseButtonClicked(node) {
+	var element = document.getElementById('queryText')
+	
+	var left = element.value.substring(0, element.selectionStart)
+	var right = element.value.substring(element.selectionEnd)
+	var middle = 'node(' + node.id + ') '
+	element.value = left + middle + right
+	element.selectionStart = element.selectionEnd = element.selectionStart + middle.length
+	element.focus()
+}
+
+function doAddButton(node) {
+	$('#queryText').val('start a = node(' + node.id + ')\nmatch p = a-[r]-(b)\nwhere 1=1\nreturn p')
+}
+
+function doCollapseButtonClicked(node) {
+	var removed = model.collapseNode(node)
+	
+	$.each(removed, function(index, nodeId) {
+		graph.removeNodeById(nodeId)
+	})
+}
+
+function doCloseButton(node) {
+	var removed = model.removeNodeById(node.id)
+
+	$.each(removed, function(index, nodeId) {
+		graph.removeNodeById(nodeId)
+	})
+}
+
+function doNameClicked(jitNode) {
+	var node = model.nodes[jitNode.id]
+	var html = '<h4><span class="detailname">' + node.data.name + '</span></h4>'
+
+	html += '<table class="props"><th class="props">properties:</th>'
+	$.each(node.data, function(key, value) {
+		html = html + '<tr class="props"><td class="propkey">' + key + '</td><td class="propvalue">' + value + '</td></tr>'
+	})
+	html += '</table>'
+
+	$('#inner-details').html(html)
+}
+
+function doEdgeClicked(jitEdge) {
+	var html = '<h4>transfers:</h4>'
+	if (model.edges[jitEdge.nodeFrom.id] && model.edges[jitEdge.nodeFrom.id][jitEdge.nodeTo.id]) {
+		var edge = model.edges[jitEdge.nodeFrom.id][jitEdge.nodeTo.id]
+		html += htmlForEdge(edge)
+	}
+	
+	if (model.edges[jitEdge.nodeTo.id] && model.edges[jitEdge.nodeTo.id][jitEdge.nodeFrom.id]) {
+		var edge = model.edges[jitEdge.nodeTo.id][jitEdge.nodeFrom.id]
+		html += htmlForEdge(edge)
+	}
+	
+	function htmlForEdge(edge) {
+		var nodeFrom = model.nodes[model.nodeId(edge.start)]
+		var nodeTo = model.nodes[model.nodeId(edge.end)]
+
+		var nameFrom = '<span class="detailname">' + nodeFrom.data.name + '</span>'
+		var nameTo = '<span class="detailname">' + nodeTo.data.name + '</span>'
+		
+		var result = '<table class="props"><tr>'
+		result += '<td class="propvalue">' + nameFrom + '</td><td>==&gt;</td><td class="propvalue">' + nameTo + '</td>'
+		result += '</tr></table><br/><table class="props">'
+		$.each(edge.data, function(key, value) {
+			result += '<tr class="props"><td class="propkey">' + key + '</td><td class="propvalue">' + value + '</td></tr>'
+		})
+		result += '</table><br/>'
+		
+		return result
+	}
+	
+	$('#inner-details').html(html)
+}
+
+function handleError(err) {
+	alert(err.message)
+	console.log(err)
+}
+
 function addQuery() {
-	query($('#queryText').val())
+	handleResult(model.addQueryResult)
+}
+
+function replaceQuery() {
+	handleResult(model.populateFromQueryResult)
+}
+
+function handleResult(method) {
+	graph.log.write('Running query...')
+	restApi.getCypherResult($('#queryText').val(), function(result, err) {
+		if (err) {
+			handleError(err)
+		} else {
+			graph.log.write('Got response...')
+			if (result.length == 0) {
+				alert('Query returned empty set.')
+			} else if (confirmHuge(result)) {
+				method(result, function(err) {
+					if (err) {
+						handleError(err)
+					} else {
+						graph.updateModel(model)
+					}
+				})
+			}
+		}
+	})
+}
+
+function confirmHuge(result) {
+	return (result.length < 70 || confirm('Add ' + result.length + ' records to the graph?'))
 }
 </script>
 
 <div id="query">
 	<form name="queryform">
 		<!-- <div id="queryArea"> -->
-		<textarea id="queryText">start a = node(1) match p = a-[*1]-() return p</textArea>
+<textarea id="queryText">
+start a = node(0)
+match p = a--b
+where 1=1
+return p</textArea>
 		<!-- </div> -->
 		<div id="queryButtons">
-		<input type="button" value="TRY" class="qbutton" onclick="tryQuery()"><br/>
 		<input type="button" value="ADD" class="qbutton" onclick="addQuery()"><br/>
 		<input type="button" value="REPLACE" class="qbutton" onclick="replaceQuery()">
 		</div>
@@ -42,9 +177,7 @@ function addQuery() {
 </div>
 
 <div id="infovis"></div>    
-    
 <div id="inner-details"></div>
-
 <div id="log"></div>
 </div>
 </body>

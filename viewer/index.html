@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Viewer</title>
+
+<!-- CSS Files -->
+<link type="text/css" href="base.css" rel="stylesheet" />
+<link type="text/css" href="ForceDirected.css" rel="stylesheet" />
+
+<!--[if IE]><script language="javascript" type="text/javascript" src="../../Extras/excanvas.js"></script><![endif]-->
+
+<!-- Libraries -->
+<script language="javascript" type="text/javascript" src="jquery-1.7.1.min.js"></script>
+<script language="javascript" type="text/javascript" src="jit-yc.js"></script>
+
+<!-- graph viz -->
+<script language="javascript" type="text/javascript" src="graph.js"></script>
+<script language="javascript" type="text/javascript" src="populatedata.js"></script>
+
+</head>
+
+<body>
+
+<script language="javascript">
+function addQuery() {
+	query($('#queryText').val())
+}
+</script>
+
+<div id="query">
+	<form name="queryform">
+		<!-- <div id="queryArea"> -->
+		<textarea id="queryText">start a = node(1) match p = a-[*1]-() return p</textArea>
+		<!-- </div> -->
+		<div id="queryButtons">
+		<input type="button" value="TRY" class="qbutton" onclick="tryQuery()"><br/>
+		<input type="button" value="ADD" class="qbutton" onclick="addQuery()"><br/>
+		<input type="button" value="REPLACE" class="qbutton" onclick="replaceQuery()">
+		</div>
+	</form>
+</div>
+
+<div id="infovis"></div>    
+    
+<div id="inner-details"></div>
+
+<div id="log"></div>
+</div>
+</body>
+</html>

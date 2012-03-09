@@ -42,7 +42,7 @@ public class PrepareWithFlagsJob {
 		counts = new Every(counts, new Count());
 		
 		Pipe joined = new CoGroup(original, new Fields("target"), counts, new Fields("target"), new Fields("source", "target", "target1", "count"));
-		joined = new Each(joined, new Identity(Integer.TYPE, Integer.TYPE, Integer.TYPE, Long.TYPE));
+		joined = new Each(joined, new Fields("source", "target", "count"), new Identity(Integer.TYPE, Integer.TYPE, Long.TYPE));
 		joined = new GroupBy(joined, new Fields("source"));
 		joined = new Every(joined, new ToAdjacencyList(incomingEdgeThreshold), Fields.RESULTS);
 		

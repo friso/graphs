@@ -4,6 +4,7 @@ import nl.waredingen.graphs.partition.IterateJob;
 import nl.waredingen.graphs.partition.IterateWithFlagsJob;
 import nl.waredingen.graphs.partition.PrepareJob;
 import nl.waredingen.graphs.partition.PrepareWithFlagsJob;
+import nl.waredingen.graphs.patternfind.PrepareSequenceFileJob;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.util.Tool;
@@ -25,6 +26,8 @@ public class Main extends Configured implements Tool {
 			return IterateWithFlagsJob.run(args[1], args[2], Integer.MAX_VALUE);
 		} else if (args[0].equalsIgnoreCase("iterate-once-with-flags")) {
 			return IterateWithFlagsJob.run(args[1], args[2], 1);
+		} else if (args[0].equalsIgnoreCase("prepare-sequence-file")) {
+			return PrepareSequenceFileJob.run(args[1], args[2], args[3]);
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

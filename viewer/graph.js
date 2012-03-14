@@ -1,4 +1,4 @@
-function Graph(events) {
+function Graph(events, viewhelpers) {
 	this.log = {
 		elem: false,
 		write: function(text) {
@@ -9,6 +9,22 @@ function Graph(events) {
 		}
 	}
 	
+	this.viewhelpers = viewhelpers || {}
+	if (!this.viewhelpers.widthForEdge) {
+		this.viewhelpers.widthForEdge = function(edge) { return 1.0 }
+	}
+	if (!this.viewhelpers.colorForEdge) {
+		this.viewhelpers.colorForEdge = function(edge) { return 'rgb(80, 80, 255)' }
+	}
+	if (!this.viewhelpers.colorForNode) {
+		this.viewhelpers.colorForNode = function(node) { return 'orange' }
+	}
+	if (!this.viewhelpers.sizeForNode) {
+		this.viewhelpers.sizeForNode = function(node) { return 8.0 }
+	}
+	if (!this.viewhelpers.typeForNode) {
+		this.viewhelpers.typeForNode = function(node) { return 'circle' }
+	}
 	this.events = events || {}
 	this.fd = new $jit.ForceDirected({
 		injectInto: 'infovis',
@@ -19,8 +35,7 @@ function Graph(events) {
 			zooming: 10
 		},
 		Node: {
-			overridable: true,
-			dim: 8
+			overridable: true
 		},
 		Edge: {
 			overridable: true,
@@ -154,8 +169,9 @@ function Graph(events) {
 				id: key,
 				name: '<nobr>' + value.data.name + '</nobr>',
 				data: {
-					'$type': 'circle',
-					'$color': 'orange'
+					'$type': self.viewhelpers.typeForNode(value),
+					'$color': self.viewhelpers.colorForNode(value),
+					'$dim': self.viewhelpers.sizeForNode(value)
 				},
 				adjacencies: []
 			}
@@ -164,8 +180,8 @@ function Graph(events) {
 					node.adjacencies.push({
 						nodeTo: edgeKey,
 						data: {
-							'$lineWidth': lineWidthFromEdge(edge),
-							'$color': lineColorFromEdge(edge),
+							'$lineWidth': self.viewhelpers.widthForEdge(edge),
+							'$color': self.viewhelpers.colorForEdge(edge),
 						}
 					})
 				})
@@ -193,14 +209,6 @@ function Graph(events) {
 		} else {
 			self.log.write('done (nothing to add)')
 		}
-		
-		function lineWidthFromEdge(edge) {
-			return 1.0
-		}
-
-		function lineColorFromEdge(edge) {
-	        return 'rgb(80, 80, 255)'
-		}
 	}
 	
 	this.removeNodeById = function(nodeId) {
@@ -218,6 +226,5 @@ function Graph(events) {
 				self.fd.labels.disposeLabel(nodeId)
 			}
 		})
-	
 	}
 }

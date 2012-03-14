@@ -54,6 +54,11 @@
 			<artifactId>cascading-core</artifactId>
 			<version>1.2.5</version>
 		</dependency>
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j</artifactId>
+			<version>1.6</version>
+		</dependency>
 		<!-- <dependency>
             <groupId>ant</groupId>
             <artifactId>ant</artifactId>

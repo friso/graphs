@@ -1,5 +1,8 @@
 package nl.waredingen.graphs;
 
+import java.util.Arrays;
+
+import nl.waredingen.graphs.importer.Neo4jImportJob;
 import nl.waredingen.graphs.partition.IterateJob;
 import nl.waredingen.graphs.partition.IterateWithFlagsJob;
 import nl.waredingen.graphs.partition.PrepareJob;
@@ -28,6 +31,8 @@ public class Main extends Configured implements Tool {
 			return IterateWithFlagsJob.run(args[1], args[2], 1);
 		} else if (args[0].equalsIgnoreCase("prepare-sequence-file")) {
 			return PrepareSequenceFileJob.run(args[1], args[2], args[3]);
+		} else if (args[0].equalsIgnoreCase("neo4j-import")) {
+			return Neo4jImportJob.run(args[1], args[2], args[3], args.length > 3 ? new String[0] : Arrays.copyOfRange(args, 4, args.length));
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

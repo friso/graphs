@@ -1,5 +1,8 @@
 # Graph Partitioning in Cascading
+*Note: initially this was just a demonstration of graph partitioning in MapReduce using Cascading. But now, there is also a Scoobi version of the same and a graph viewer which visualizes graphs taken from a local Neo4j instance and there will be some more stuff (like a Neo4j batch importer). Accompanying blog posts will also follow...*
+
 This is a Hadoop MapReduce based implementation of graph partitioning. The MapReduce code is written using [Cascading](http://www.cascading.org/ "Cascading").
+
 
 ## Input and output
 The program takes a graph as input represented as a text file. Each line of the file must contain a single edge of the graph in the form of `source,target`, where source and target are numeric node IDs. Example:
@@ -53,4 +56,4 @@ Both of the implementations consist of a prepare step and a iterative step. The 
 The prepare steps take an input file as described above and turn it into a file that can be fed to the iterative step. This file is the same format as the output file. The iterate-once arguments will perform a single iteration of the partitioning algorithm. The iterate variant will run the iterative step until it converges.
 
 ## More information
-This code is companion to a blog post. First part is here: http://waredingen.nl/graph-partitioning-in-mapreduce-with-cascadin
+This code is companion to a blog post. First part is here: http://waredingen.nl/graph-partitioning-in-mapreduce-with-cascadin, second part is here: http://waredingen.nl/graph-partitioning-part-2-connected-graphs

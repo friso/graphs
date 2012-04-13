@@ -36,7 +36,7 @@ public class PrepareJob {
 		Tap sink = new Hfs(sinkScheme, output, SinkMode.REPLACE);
 		
 		Pipe prepare = new Pipe("prepare");
-		prepare = new Each(prepare, new Identity(Integer.TYPE, Integer.TYPE));
+		prepare = new Each(prepare, new Identity(Long.TYPE, Long.TYPE));
 		prepare = new GroupBy(prepare, new Fields("source"), new Fields("target"), true);
 		prepare = new Every(prepare, new ToAdjacencyList(), Fields.RESULTS);
 		
@@ -54,9 +54,9 @@ public class PrepareJob {
 	}
 	
 	private static class ToAdjacencyListContext {
-		int source;
-		int partition = -1;
-		List<Integer> targets = new ArrayList<Integer>();
+		long source;
+		long partition = -1;
+		List<Long> targets = new ArrayList<Long>();
 	}
 	
 	@SuppressWarnings("serial")
@@ -68,7 +68,7 @@ public class PrepareJob {
 		@Override
 		public void start(FlowProcess flowProcess, AggregatorCall<ToAdjacencyListContext> aggregatorCall) {
 			ToAdjacencyListContext context = new ToAdjacencyListContext();
-			context.source = aggregatorCall.getGroup().getInteger("source");
+			context.source = aggregatorCall.getGroup().getLong("source");
 			aggregatorCall.setContext(context);
 		}
 
@@ -77,7 +77,7 @@ public class PrepareJob {
 			ToAdjacencyListContext context = aggregatorCall.getContext();
 			
 			TupleEntry arguments = aggregatorCall.getArguments();
-			int target = arguments.getInteger("target");
+			long target = arguments.getLong("target");
 			if (context.partition == -1) {
 				context.partition = target > context.source ? target : context.source;
 			}

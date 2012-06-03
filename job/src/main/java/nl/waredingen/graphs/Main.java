@@ -1,7 +1,5 @@
 package nl.waredingen.graphs;
 
-import java.util.Arrays;
-
 import nl.waredingen.graphs.bgp.PrepareBgpGraphJob;
 import nl.waredingen.graphs.importer.Neo4jImportJob;
 import nl.waredingen.graphs.partition.IterateJob;
@@ -33,9 +31,11 @@ public class Main extends Configured implements Tool {
 		} else if (args[0].equalsIgnoreCase("prepare-sequence-file")) {
 			return PrepareSequenceFileJob.run(args[1], args[2], args[3]);
 		} else if (args[0].equalsIgnoreCase("neo4j-import")) {
-			return Neo4jImportJob.run(args[1], args[2], args[3], args.length > 4 ? Arrays.copyOfRange(args, 4, args.length) : new String[0]);
+			String[] nodeFields = args.length > 3 && !"".equals(args[4].trim()) ? args[4].split(",") : new String[0];
+			String[] edgeFields = args.length > 4 && !"".equals(args[5].trim()) ? args[5].split(",") : new String[0];
+			return Neo4jImportJob.run(args[1], args[2], args[3], nodeFields, edgeFields);
 		} else if (args[0].equalsIgnoreCase("prepare-bgp")) {
-			return PrepareBgpGraphJob.runJob(args[1], args[2], args[3], args.length > 4 && "true".equals(args[4]));
+			return PrepareBgpGraphJob.runJob(args[1], args[2], args[3]);
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

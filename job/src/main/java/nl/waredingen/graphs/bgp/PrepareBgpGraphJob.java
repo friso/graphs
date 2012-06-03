@@ -11,10 +11,7 @@ import cascading.flow.FlowProcess;
 import cascading.operation.BaseOperation;
 import cascading.operation.Function;
 import cascading.operation.FunctionCall;
-import cascading.operation.aggregator.Sum;
 import cascading.pipe.Each;
-import cascading.pipe.Every;
-import cascading.pipe.GroupBy;
 import cascading.pipe.Pipe;
 import cascading.pipe.assembly.Unique;
 import cascading.scheme.Scheme;
@@ -29,7 +26,7 @@ import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
 public class PrepareBgpGraphJob {
-	public static int runJob(String inputFiles, String nodesFile, String edgesFile, boolean withCounts) {
+	public static int runJob(String inputFiles, String nodesFile, String edgesFile) {
 		//From: http://www.routeviews.org/data.html
 		//BGP protocol|unix time in seconds|Withdraw or Announce|PeerIP|PeerAS|Prefix|AS_PATH|Origin|Next_Hop|Local_Pref|MED|Community|AtomicAGG|AGGREGATOR|
 		Scheme sourceScheme = new TextDelimited(new Fields(
@@ -60,7 +57,7 @@ public class PrepareBgpGraphJob {
 		Scheme nodesScheme = new TextDelimited(new Fields("id", "name"), "\t");
 		Tap nodesSink = new Hfs(nodesScheme, nodesFile, SinkMode.REPLACE);
 		
-		Scheme edgesScheme = withCounts ? new TextDelimited(new Fields("from", "to", "updatecount"), "\t") : new TextDelimited(new Fields("from", "to"), ",");
+		Scheme edgesScheme = new TextDelimited(new Fields("from", "to"), "\t");
 		Tap edgesSink = new Hfs(edgesScheme, edgesFile, SinkMode.REPLACE);
 		
 		Pipe original = new Pipe("original");
@@ -71,12 +68,8 @@ public class PrepareBgpGraphJob {
 		
 		Pipe edges = new Pipe("edges", original);
 		edges = new Each(edges, new PathToEdges(), Fields.RESULTS);
-		if (withCounts) {
-			edges = new GroupBy(edges, new Fields("from", "to"));
-			edges = new Every(edges, new Fields("updatecount"), new Sum(new Fields("updatecount"), Integer.TYPE));
-		} else {
-			edges = new Unique(edges, new Fields("from", "to"));
-		}
+		
+		edges = new Unique(edges, new Fields("from", "to"));
 		
 		Map<String,Tap> sinkMap = new HashMap<String,Tap>();
 		sinkMap.put("nodes", nodesSink);

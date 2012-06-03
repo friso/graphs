@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.BatchInserterIndex;
@@ -28,17 +29,19 @@ public class Neo4jImportJob {
 	private final File nodesFile;
 	private final File edgesFile;
 	private final File output;
-	private final String[] fields;
+	private final String[] nodeFields;
+	private final String[] edgeFields;
 	
 	private int progressEvery = 1000;
 	private long globalCount;
 	private static final String[] MAGNITUDES = {"K", "0K", "00K", "M", "0M", "00M", "B", "0B"};
 	
-	public Neo4jImportJob(String nodes, String edges, String outputDir, String[] fields) {
+	public Neo4jImportJob(String nodes, String edges, String outputDir, String[] nodeFields, String[] edgeFields) {
 		this.output = new File(outputDir);
 		this.nodesFile = new File(nodes);
 		this.edgesFile = new File(edges);
-		this.fields = fields;
+		this.nodeFields = nodeFields;
+		this.edgeFields = edgeFields;
 		
 		this.globalCount = 0;
 	}
@@ -90,19 +93,19 @@ public class Neo4jImportJob {
 		long nodeCount = 0;
 		
 		BufferedReader reader = new BufferedReader(new FileReader(nodesFile));
-		Object[] properties = new Object[fields.length * 2];
-		for (int c = 0; c < fields.length; c++) {
-			properties[c * 2] = fields[c];
+		Object[] properties = new Object[nodeFields.length * 2];
+		for (int c = 0; c < nodeFields.length; c++) {
+			properties[c * 2] = nodeFields[c];
 		}
 		
 		String line;
 		while ((line = reader.readLine()) != null) {
-			String[] parts = line.trim().split(SPLIT_STRING);
+			String[] parts = line.split(SPLIT_STRING);
 			
 			long fileNodeId = Long.parseLong(parts[0]);
 			long nodeId;
-			for (int c = 0; c < fields.length; c++) {
-				properties[1 + c * 2] = parts[c + 1].trim();
+			for (int c = 0; c < nodeFields.length; c++) {
+				properties[1 + c * 2] = objectFromProperty(parts[c + 1].trim());
 			}
 			nodeId = db.createNode(map(properties));
 			index.add(nodeId, map(properties));
@@ -125,7 +128,10 @@ public class Neo4jImportJob {
 		
 		BufferedReader reader = new BufferedReader(new FileReader(edgesFile));
 		
-		Object[] properties = new Object[0];
+		Object[] properties = new Object[edgeFields.length * 2];
+		for (int c = 0; c < edgeFields.length; c++) {
+			properties[c * 2] = edgeFields[c];
+		}
 		
 		String line;
 		while ((line = reader.readLine()) != null) {
@@ -134,6 +140,11 @@ public class Neo4jImportJob {
 			long fromAccountId = Long.parseLong(parts[0]);
 			long toAccountId = Long.parseLong(parts[1]);
 			if (accountNodeIds.containsKey(fromAccountId) && accountNodeIds.containsKey(toAccountId)) {
+				
+				for (int c = 0; c < edgeFields.length; c++) {
+					properties[1 + c * 2] = objectFromProperty(parts[c + 1].trim());
+				}
+				
 				db.createRelationship(accountNodeIds.get(fromAccountId), accountNodeIds.get(toAccountId), ConnectionTypes.LINKED_TO, map(properties));
 				edgeCount++;
 			}
@@ -141,6 +152,26 @@ public class Neo4jImportJob {
 		}
 		
 		return edgeCount;
+	}
+	
+	private static Pattern fpNumber = Pattern.compile("^[-]?\\d+[\\.]\\d+$");
+	private static Pattern intNumber = Pattern.compile("^[-]?\\d+$");
+	private static Pattern hexNumber = Pattern.compile("^0x[0-9A-Fa-f]+$");
+	
+	private static Object objectFromProperty(String value) {
+		if (fpNumber.matcher(value).matches()) {
+			return Double.parseDouble(value);
+		} else if (intNumber.matcher(value).matches()) {
+			return Long.parseLong(value);
+		} else if (hexNumber.matcher(value).matches()) {
+			return Long.parseLong(value.substring(2), 16);
+		} else {
+			return value;
+		}
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(objectFromProperty("1234").getClass());
 	}
 
 	private Map<String, String> getConfig() {
@@ -177,8 +208,8 @@ public class Neo4jImportJob {
 		progressEvery = 1000;
 	}
 	
-	public static int run(String nodes, String edges, String db, String[] fields) {
-		Neo4jImportJob importer = new Neo4jImportJob(nodes, edges, db, fields);
+	public static int run(String nodes, String edges, String db, String[] nodeFields, String[] edgeFields) {
+		Neo4jImportJob importer = new Neo4jImportJob(nodes, edges, db, nodeFields, edgeFields);
 		return importer.runImport();
 	}
 }

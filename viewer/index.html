@@ -41,7 +41,9 @@ function init() {
 		collapseButtonClicked: doCollapseButtonClicked
 	},
 	{
-		widthForEdge: function(edge) { return 2.0 }
+		widthForEdge: function(edge) {
+			return Math.log(edge.data.count) / 2.7 + 0.6
+		}
 	})
 }
 
@@ -90,7 +92,7 @@ function doNameClicked(jitNode) {
 }
 
 function doEdgeClicked(jitEdge) {
-	var html = '<h4>transfers:</h4>'
+	var html = '<h4>relationship:</h4>'
 	if (model.edges[jitEdge.nodeFrom.id] && model.edges[jitEdge.nodeFrom.id][jitEdge.nodeTo.id]) {
 		var edge = model.edges[jitEdge.nodeFrom.id][jitEdge.nodeTo.id]
 		html += htmlForEdge(edge)

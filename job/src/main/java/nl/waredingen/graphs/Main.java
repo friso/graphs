@@ -2,6 +2,7 @@ package nl.waredingen.graphs;
 
 import nl.waredingen.graphs.bgp.PrepareBgpGraphJob;
 import nl.waredingen.graphs.importer.Neo4jImportJob;
+import nl.waredingen.graphs.misc.RowNumberJob;
 import nl.waredingen.graphs.partition.IterateJob;
 import nl.waredingen.graphs.partition.IterateWithFlagsJob;
 import nl.waredingen.graphs.partition.PrepareJob;
@@ -36,6 +37,8 @@ public class Main extends Configured implements Tool {
 			return Neo4jImportJob.run(args[1], args[2], args[3], nodeFields, edgeFields);
 		} else if (args[0].equalsIgnoreCase("prepare-bgp")) {
 			return PrepareBgpGraphJob.runJob(args[1], args[2], args[3]);
+		} else if (args[0].equalsIgnoreCase("rownumbers")) {
+			return RowNumberJob.run(args[1], args[2], getConf());
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

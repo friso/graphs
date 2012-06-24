@@ -76,13 +76,10 @@ public class RowNumberJob {
 		
 		protected void cleanup(Context context) throws IOException, InterruptedException {
 			outputKey.set(COUNTER_MARKER);
-			for(int c = 0; c < counters.length; c++) {
-				for (int p = c + 1; p < counters.length; p++) {
-					if (counters[c] > 0) {
-						outputValue.setCounter(p, counters[c]);
-						context.write(outputKey, outputValue);
-					}
-				}
+			for(int c = 0; c < counters.length - 1; c++) {
+				outputValue.setCounter(c + 1, counters[c]);
+				context.write(outputKey, outputValue);
+				counters[c + 1] += counters[c];
 			}
 		}
 	}

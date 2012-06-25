@@ -43,8 +43,6 @@ public class RowNumberJob {
 			
 			job.setJarByClass(RowNumberJob.class);
 			
-			job.setNumReduceTasks(3);
-			
 			job.waitForCompletion(true);
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
@@ -77,8 +75,10 @@ public class RowNumberJob {
 		protected void cleanup(Context context) throws IOException, InterruptedException {
 			outputKey.set(COUNTER_MARKER);
 			for(int c = 0; c < counters.length - 1; c++) {
-				outputValue.setCounter(c + 1, counters[c]);
-				context.write(outputKey, outputValue);
+				if (counters[c] > 0) {
+					outputValue.setCounter(c + 1, counters[c]);
+					context.write(outputKey, outputValue);
+				}
 				counters[c + 1] += counters[c];
 			}
 		}

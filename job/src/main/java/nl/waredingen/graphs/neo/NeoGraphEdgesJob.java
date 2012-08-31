@@ -186,7 +186,9 @@ public class NeoGraphEdgesJob {
 			long to2 = arguments.getLong("to2");
 			long relnum2 = arguments.getLong("relnum2");
 
+			//TODO Also remove the records which don't start
 			return id == toid && from == from2 && to == to2 && relnum == relnum2;
+			
 		}
 		
 	}

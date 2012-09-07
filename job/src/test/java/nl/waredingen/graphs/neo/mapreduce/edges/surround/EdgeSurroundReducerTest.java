@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.waredingen.graphs.neo.mapreduce.AscLongDescLongWritable;
 import nl.waredingen.graphs.neo.mapreduce.join.JoinFromEdgesMapper;
 
 import org.apache.hadoop.io.BytesWritable;

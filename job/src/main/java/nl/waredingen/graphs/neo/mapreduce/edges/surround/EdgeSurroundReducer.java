@@ -3,6 +3,9 @@ package nl.waredingen.graphs.neo.mapreduce.edges.surround;
 import java.io.IOException;
 import java.util.Iterator;
 
+import nl.waredingen.graphs.neo.mapreduce.AscLongDescLongWritable;
+import nl.waredingen.graphs.neo.mapreduce.SurroundingContext;
+
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -14,7 +17,7 @@ public class EdgeSurroundReducer extends Reducer<AscLongDescLongWritable, Text, 
 	protected void reduce(AscLongDescLongWritable key, Iterable<Text> values, Context context) throws IOException ,InterruptedException {
 		Iterator<Text> iter = values.iterator();
 		
-		EdgeSurroundContext edge = new EdgeSurroundContext();
+		SurroundingContext edge = new SurroundingContext();
 		
 		while (iter.hasNext()) {
 			String[] vals = iter.next().toString().split("\t");
@@ -28,7 +31,7 @@ public class EdgeSurroundReducer extends Reducer<AscLongDescLongWritable, Text, 
 				edge.id = id;
 				edge.from = from;
 				edge.to = to;
-				edge.relnum = relnum;
+				edge.other = relnum;
 				edge.prev = -1L; // don't know yet
 				edge.next = -1L; // first call, relationships ordered descending, so last rel, so no next available
 
@@ -41,11 +44,11 @@ public class EdgeSurroundReducer extends Reducer<AscLongDescLongWritable, Text, 
 				outputValue.set(edge.toString());
 				context.write(NullWritable.get(), outputValue);
 
-				long next = edge.relnum;
+				long next = edge.other;
 				edge.id = id;
 				edge.from = from;
 				edge.to = to;
-				edge.relnum = relnum;
+				edge.other = relnum;
 				edge.prev = -1L; // don't know yet
 				edge.next = next;
 

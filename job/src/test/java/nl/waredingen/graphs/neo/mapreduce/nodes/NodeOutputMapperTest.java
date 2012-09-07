@@ -41,7 +41,7 @@ public class NodeOutputMapperTest {
 		assertThat(output.size(), is(1));
 
 		assertThat(output.get(0).getFirst(), equalTo(new LongWritable(11)));
-		assertThat(output.get(0).getSecond(), equalTo(new Text("3	0")));
+		assertThat(output.get(0).getSecond(), equalTo(new Text("3	22")));
 
 	}
 }

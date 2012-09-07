@@ -1,3 +1,3 @@
 A	Aname
-B	Bname
+B	BnameWhichIsVeryLongBecauseWeNeedSomeProofThatOurPropertyStringStoreIsRealyWorkingOkAndAlsoSpanningTwoBlocksOfThe120ByteLargeBlockSize
 C	Cname

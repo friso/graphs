@@ -3,6 +3,9 @@ package nl.waredingen.graphs.neo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import nl.waredingen.graphs.neo.mapreduce.PureMRNodesAndEdgesJob;
+import nl.waredingen.graphs.neo.mapreduce.RownumPartitioner;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;

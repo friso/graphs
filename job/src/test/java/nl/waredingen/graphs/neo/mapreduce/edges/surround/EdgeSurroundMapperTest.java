@@ -6,6 +6,8 @@ import static org.junit.Assert.assertThat;
 
 import java.util.List;
 
+import nl.waredingen.graphs.neo.mapreduce.AscLongDescLongWritable;
+
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;

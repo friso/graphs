@@ -24,7 +24,7 @@ public class PropertyOutputIdBlockcountPartitioner extends Partitioner<ByteWrita
 	}
 	
 	public static int partitionForValue(PropertyOutputIdBlockcountValueWritable value, int numPartitions, long maximumIds) {
-		double divider = Math.max(numPartitions, (double) maximumIds / numPartitions);
+		double divider = Math.max(1, (double) maximumIds / numPartitions);
 		return (int) (value.getId().get() / divider);
 	}
 

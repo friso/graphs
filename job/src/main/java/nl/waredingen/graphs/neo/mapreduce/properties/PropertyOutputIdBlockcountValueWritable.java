@@ -115,5 +115,12 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "PropertyOutputIdBlockcountValueWritable [id=" + id + ", value=" + value + ", count=" + count
+				+ ", partition=" + partition + "]";
+	}
+
 	
 }

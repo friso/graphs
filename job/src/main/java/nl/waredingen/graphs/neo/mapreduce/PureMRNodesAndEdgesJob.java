@@ -59,6 +59,18 @@ public class PureMRNodesAndEdgesJob {
 	public static final String NUMBEROFROWS_CONFIG = "neo.nodes.edges.job.nr_of_rows";
 
 	public static int run(String nodes, String edges, String output, Configuration conf) {
+		//TODO Refactoring: Split up all the jobs in separate jobs
+		//TODO Refactoring: Get all CONSTANTS in here
+		//TODO Refactoring: Configure propertynames (and totalnr of props) in config xml or if not exists in here
+		//TODO Refactoring: Configure file formats in here (tab separated but which field is what in which step
+		//TODO Refactoring: Add more test to better describe the meaning of the mappers and reducers
+		//TODO Refactoring: Think of more descriptive names
+		//TODO Refactoring: Combine jobs if possible
+		//TODO Add: Array properties
+		//TODO Add: Primitive properties
+		//TODO Fix: 42 is not the correct arrayprop index!
+		//TODO Fix: Make import work with 1.8 version
+		//TODO Check: Check copied code is still the same in neo 1.8
 		String numberedNodes = output + "/numberednodes";
 		String numberedEdges = output + "/numberededges";
 

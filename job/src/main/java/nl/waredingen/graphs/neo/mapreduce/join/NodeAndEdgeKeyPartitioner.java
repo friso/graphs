@@ -8,7 +8,7 @@ public class NodeAndEdgeKeyPartitioner extends Partitioner<Text, Text> {
 	@Override
 	public int getPartition(Text key, Text val, int numPartitions) {
 		int hash = key.toString().substring(1).hashCode();
-		return hash % numPartitions;
+		return (hash  & Integer.MAX_VALUE) % numPartitions;
 	}
 
 }

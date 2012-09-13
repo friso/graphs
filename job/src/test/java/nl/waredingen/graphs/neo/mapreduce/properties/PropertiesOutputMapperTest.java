@@ -55,22 +55,22 @@ public class PropertiesOutputMapperTest {
 	
 	@Test
 	public void shouldOutputAsPropertieswithPropertyIdAsTheKey() throws Exception {
-		output = driver.withInputKey(new LongWritable(0)).withInputValue(new Text("0	2	1	Aname	40	1	2")).run();
+		output = driver.withInputKey(new LongWritable(0)).withInputValue(new Text("0	1	1	Aname	40	1	2")).run();
 
 		assertThat(output.size(), is(3));
 
 		PropertyOutputIdBlockcountValueWritable val = new PropertyOutputIdBlockcountValueWritable();
-		val.setValues(new LongWritable(2), new Text("1	Aname	40	1	2"));
+		val.setValues(new LongWritable(1), new Text("1	Aname	40	1	2"));
 		
 		assertThat(output.get(0).getFirst(), equalTo(new ByteWritable(RowNumberJob.VALUE_MARKER)));
 		assertThat(output.get(0).getSecond(), equalTo(val));
 		
 		val = new PropertyOutputIdBlockcountValueWritable();
 		val.setValues(PropertyOutputIdBlockcountValueWritable.EMPTY_ID, PropertyOutputIdBlockcountValueWritable.EMPTY_STRING);
-		val.setCounter(1, 40);
+		val.setCounter(2, 40);
 
-		assertThat(output.get(1).getFirst(), equalTo(new ByteWritable(RowNumberJob.COUNTER_MARKER)));
-		assertThat(output.get(1).getSecond(), equalTo(val));
+		assertThat(output.get(2).getFirst(), equalTo(new ByteWritable(RowNumberJob.COUNTER_MARKER)));
+		assertThat(output.get(2).getSecond(), equalTo(val));
 
 	}
 }

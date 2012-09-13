@@ -20,4 +20,13 @@ public class NodeAndEdgeKeyPartitionerTest {
 
 	}
 
+	@Test
+	public void testPartitionNotNegative() {
+		Text key = new Text("N365545643");
+		
+		NodeAndEdgeKeyPartitioner partitioner = new NodeAndEdgeKeyPartitioner();
+
+		assertTrue(partitioner.getPartition(key, new Text(), 50) >= 0);
+		
+	}
 }

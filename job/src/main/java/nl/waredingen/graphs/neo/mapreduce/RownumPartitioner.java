@@ -12,7 +12,7 @@ public class RownumPartitioner<K, V> extends Partitioner<K, V> implements Config
 	
 	@Override
 	public int getPartition(K key, V value, int numPartitions) {
-		double divider = (double) max / numPartitions;
+		double divider = Math.max(1, (double) max / numPartitions);
 
 		return (int) (((LongWritable) key).get() / divider);
 	}

@@ -15,8 +15,11 @@ public class NodeAndEdgeIdKeyGroupingComparator extends WritableComparator {
 		Text k1 = (Text) w1;
 		Text k2 = (Text) w2;
 
-		String key1 = k1.toString().split(";")[0];
-		String key2 = k2.toString().split(";")[0];
+		String k1s = k1.toString();
+		String key1 = k1s.substring(0, k1s.lastIndexOf(";"));
+		String k2s = k2.toString();
+		String key2 = k2s.substring(0, k2s.lastIndexOf(";"));
+
 		return key1.compareTo(key2);
 	}
 

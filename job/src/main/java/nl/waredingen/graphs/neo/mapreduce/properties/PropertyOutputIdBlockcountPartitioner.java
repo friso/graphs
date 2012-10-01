@@ -8,15 +8,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 
-public class PropertyOutputIdBlockcountPartitioner extends Partitioner<ByteWritable, PropertyOutputIdBlockcountValueWritable> implements Configurable {
+public class PropertyOutputIdBlockcountPartitioner extends Partitioner<ByteMarkerPropertyIdWritable, PropertyOutputIdBlockcountValueWritable> implements Configurable {
 
 	private long max = 0L;
 	private Configuration conf;
 	
 	@Override
-	public int getPartition(ByteWritable key, PropertyOutputIdBlockcountValueWritable value, int numPartitions) {
+	public int getPartition(ByteMarkerPropertyIdWritable key, PropertyOutputIdBlockcountValueWritable value, int numPartitions) {
 
-		if (key.get() == (byte) RowNumberJob.COUNTER_MARKER) {
+		if (key.getMarker().get() == (byte) RowNumberJob.COUNTER_MARKER) {
 			return value.getPartition();
 		} else {
 			return PropertyOutputIdBlockcountPartitioner.partitionForValue(value, numPartitions, max);

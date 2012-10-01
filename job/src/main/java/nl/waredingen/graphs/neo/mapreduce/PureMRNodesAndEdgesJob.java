@@ -1,13 +1,11 @@
 package nl.waredingen.graphs.neo.mapreduce;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import nl.waredingen.graphs.misc.RowNumberJob;
-import nl.waredingen.graphs.misc.RowNumberJob.IndifferentComparator;
 import nl.waredingen.graphs.neo.mapreduce.edges.EdgeOutputMapper;
 import nl.waredingen.graphs.neo.mapreduce.edges.EdgeOutputReducer;
 import nl.waredingen.graphs.neo.mapreduce.edges.surround.EdgeSurroundMapper;
@@ -28,6 +26,9 @@ import nl.waredingen.graphs.neo.mapreduce.join.NodeAndEdgeKeyPartitioner;
 import nl.waredingen.graphs.neo.mapreduce.join.NodeKeyGroupingComparator;
 import nl.waredingen.graphs.neo.mapreduce.nodes.NodeOutputMapper;
 import nl.waredingen.graphs.neo.mapreduce.nodes.NodeOutputReducer;
+import nl.waredingen.graphs.neo.mapreduce.properties.ByteMarkerAndPropertyOutputIdComparator;
+import nl.waredingen.graphs.neo.mapreduce.properties.ByteMarkerPropertyIdWritable;
+import nl.waredingen.graphs.neo.mapreduce.properties.IndifferentByteMarkerAndPropertyOutputIdComparator;
 import nl.waredingen.graphs.neo.mapreduce.properties.NodePreparePropertiesMapper;
 import nl.waredingen.graphs.neo.mapreduce.properties.NodePreparePropertiesReducer;
 import nl.waredingen.graphs.neo.mapreduce.properties.PropertyOutputIdBlockcountPartitioner;
@@ -38,13 +39,10 @@ import nl.waredingen.graphs.neo.neo4j.Neo4JUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.Task.Counter;
-import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
@@ -68,6 +66,7 @@ public class PureMRNodesAndEdgesJob {
 		//TODO Refactoring: Combine jobs if possible
 		//TODO Add: Array properties
 		//TODO Add: Primitive properties
+		//TODO Fix: Make sure all works if splitcharacter is also in key or value!
 		//TODO Fix: 42 is not the correct arrayprop index!
 		//TODO Fix: Make import work with 1.8 version
 		//TODO Check: Check copied code is still the same in neo 1.8
@@ -136,7 +135,7 @@ public class PureMRNodesAndEdgesJob {
 
 			joinTo.waitForCompletion(true);
 
-			Job groupJob = new Job(conf, "Join to nodes and edges job.");
+			Job groupJob = new Job(conf, "Group nodes and edges job.");
 			groupJob.setGroupingComparatorClass(NodeAndEdgeIdKeyGroupingComparator.class);
 			groupJob.setSortComparatorClass(NodeAndEdgeIdKeyComparator.class);
 			groupJob.setPartitionerClass(NodeAndEdgeIdKeyPartitioner.class);
@@ -171,10 +170,13 @@ public class PureMRNodesAndEdgesJob {
 			FileInputFormat.addInputPath(nodeOutputJob, new Path(grouped));
 
 			nodeOutputJob.setReducerClass(NodeOutputReducer.class);
+//			nodeOutputJob.setReducerClass(NodeOutputAsTextReducer.class);
 			nodeOutputJob.setOutputKeyClass(NullWritable.class);
 			nodeOutputJob.setOutputValueClass(BytesWritable.class);
+//			nodeOutputJob.setOutputValueClass(Text.class);
 
 			nodeOutputJob.setOutputFormatClass(NewByteBufferOutputFormat.class);
+//			nodeOutputJob.setOutputFormatClass(TextOutputFormat.class);
 			FileOutputFormat.setOutputPath(nodeOutputJob, new Path(nodesOutput));
 
 			nodeOutputJob.setJarByClass(PureMRNodesAndEdgesJob.class);
@@ -225,7 +227,7 @@ public class PureMRNodesAndEdgesJob {
 			joinSurroundJob.waitForCompletion(true);
 
 			conf.set(NUMBEROFROWS_CONFIG, "" + nrOfEdges);
-			Job edgeOutputJob = new Job(conf, "Output nodes job.");
+			Job edgeOutputJob = new Job(conf, "Output edges job.");
 			edgeOutputJob.setPartitionerClass(RownumPartitioner.class);
 
 			edgeOutputJob.setMapOutputKeyClass(LongWritable.class);
@@ -236,10 +238,13 @@ public class PureMRNodesAndEdgesJob {
 			FileInputFormat.addInputPath(edgeOutputJob, new Path(joinededges));
 
 			edgeOutputJob.setReducerClass(EdgeOutputReducer.class);
+//			edgeOutputJob.setReducerClass(EdgeOutputAsTextReducer.class);
 			edgeOutputJob.setOutputKeyClass(NullWritable.class);
 			edgeOutputJob.setOutputValueClass(BytesWritable.class);
+//			edgeOutputJob.setOutputValueClass(Text.class);
 
 			edgeOutputJob.setOutputFormatClass(NewByteBufferOutputFormat.class);
+//			edgeOutputJob.setOutputFormatClass(TextOutputFormat.class);
 			FileOutputFormat.setOutputPath(edgeOutputJob, new Path(edgesOutput));
 
 			edgeOutputJob.setJarByClass(PureMRNodesAndEdgesJob.class);
@@ -285,11 +290,12 @@ public class PureMRNodesAndEdgesJob {
 			Neo4JUtils.writePropertyStringStoreFooter(propertiesOutput, conf);
 
 			conf.set(NUMBEROFROWS_CONFIG, "" + nrOfNodes * namesMap.size());
-			Job nodePropertiesOutputJob = new Job(conf, "Output nodes job.");
+			Job nodePropertiesOutputJob = new Job(conf, "Output properties job.");
 			nodePropertiesOutputJob.setPartitionerClass(PropertyOutputIdBlockcountPartitioner.class);
-			nodePropertiesOutputJob.setGroupingComparatorClass(IndifferentComparator.class);
+			nodePropertiesOutputJob.setSortComparatorClass(ByteMarkerAndPropertyOutputIdComparator.class);
+			nodePropertiesOutputJob.setGroupingComparatorClass(IndifferentByteMarkerAndPropertyOutputIdComparator.class);
 
-			nodePropertiesOutputJob.setMapOutputKeyClass(ByteWritable.class);
+			nodePropertiesOutputJob.setMapOutputKeyClass(ByteMarkerPropertyIdWritable.class);
 			nodePropertiesOutputJob.setMapOutputValueClass(PropertyOutputIdBlockcountValueWritable.class);
 
 			nodePropertiesOutputJob.setMapperClass(PropertyOutputMapper.class);
@@ -297,8 +303,11 @@ public class PureMRNodesAndEdgesJob {
 			FileInputFormat.addInputPath(nodePropertiesOutputJob, new Path(nodePropertiesPrepareOutput));
 
 			nodePropertiesOutputJob.setReducerClass(PropertyOutputReducer.class);
+//			nodePropertiesOutputJob.setReducerClass(PropertyAsTextOutputReducer.class);
 
 			FileOutputFormat.setOutputPath(nodePropertiesOutputJob, new Path(propertiesOutput + "/propertystore.db"));
+//			MultipleOutputs.addNamedOutput(nodePropertiesOutputJob, "props", TextOutputFormat.class, NullWritable.class, Text.class);
+//			MultipleOutputs.addNamedOutput(nodePropertiesOutputJob, "strings", TextOutputFormat.class, NullWritable.class, Text.class);
 			MultipleOutputs.addNamedOutput(nodePropertiesOutputJob, "props", NewByteBufferOutputFormat.class, NullWritable.class, BytesWritable.class);
 			MultipleOutputs.addNamedOutput(nodePropertiesOutputJob, "strings", NewByteBufferOutputFormat.class, NullWritable.class, BytesWritable.class);
 
@@ -310,7 +319,7 @@ public class PureMRNodesAndEdgesJob {
 			
 			long nrOfWrittenStringBlocks = nodePropertiesOutputJob.getCounters().findCounter("org.apache.hadoop.mapreduce.lib.output.MultipleOutputs", "strings.blocks").getValue();
 
-				System.out.println(nrOfWrittenStringBlocks);
+			System.out.println(nrOfWrittenStringBlocks);
 
 			Neo4JUtils.writePropertyIds(nrOfNodes * namesMap.size(), propertiesOutput + "/neostore.propertystore.db", conf);
 			Neo4JUtils.writePropertyIds(nrOfWrittenStringBlocks, propertiesOutput + "/neostore.propertystore.db.strings", conf);

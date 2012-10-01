@@ -15,7 +15,7 @@ public class EdgeSurroundMapper extends Mapper<LongWritable, Text, AscLongDescLo
 
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 		//nodeid	node	nodename	edgeid fromnodeid	tonodeid
-		String[] vals = value.toString().split("\t");
+		String[] vals = value.toString().split("\t", 6);
 		outputKey.setLeft(new LongWritable(Long.parseLong(vals[0])));
 		outputKey.setRight(new LongWritable(Long.parseLong(vals[3])));
 

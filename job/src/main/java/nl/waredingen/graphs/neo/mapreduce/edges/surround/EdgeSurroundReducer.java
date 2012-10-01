@@ -20,7 +20,7 @@ public class EdgeSurroundReducer extends Reducer<AscLongDescLongWritable, Text, 
 		SurroundingContext edge = new SurroundingContext();
 		
 		while (iter.hasNext()) {
-			String[] vals = iter.next().toString().split("\t");
+			String[] vals = iter.next().toString().split("\t", 2);
 			
 			long id = key.getLeft().get();
 			long from = Long.parseLong(vals[0]);

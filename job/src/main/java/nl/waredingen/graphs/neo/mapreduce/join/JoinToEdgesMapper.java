@@ -10,7 +10,7 @@ public class JoinToEdgesMapper extends Mapper<Text, Text, Text, Text> {
 	private Text outputKey = new Text();
 	
 	protected void map(Text key, Text value, Context context) throws IOException ,InterruptedException {
-		String[] values = value.toString().split("\t");
+		String[] values = value.toString().split("\t", 4);
 		outputKey.set("E"+values[2]);
 		context.write(outputKey, value);
 	}

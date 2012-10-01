@@ -12,7 +12,7 @@ public class GroupNodesAndEdgesMapper extends Mapper<Text, Text, Text, Text> {
 	
 	protected void map(Text key, Text value, Context context) throws IOException ,InterruptedException {
 		//edgeid fromnode	tonode	fromnodeid	fromnode	fromname	tonodeid	tonode	toname
-		String[] values = value.toString().split("\t");
+		String[] values = value.toString().split("\t",9);
 		//edgeid	fromnodeid	tonodeid
 		outputValue.set(values[0] + "\t" + values[3]+ "\t" + values[6]);
 

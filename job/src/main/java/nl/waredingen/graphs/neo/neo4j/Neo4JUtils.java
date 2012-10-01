@@ -144,7 +144,7 @@ public class Neo4JUtils {
 
 		tndos.close();
 
-		writeTypeNameIds(1L, output, conf);
+		writeTypeNameIds(2L, output, conf);
 	}
 
 	public static void writeTypeIds(long lastTypeId, String output, Configuration conf) throws IOException {
@@ -580,8 +580,8 @@ public class Neo4JUtils {
 		idos.close();
 		kdos.close();
 
-		writePropertyIds(lastUsedIndexId + 1, indexOutput, conf);
-		writePropertyIds(nextKeyBlockId -1, keysOutput, conf);
+		writePropertyIds(lastUsedIndexId, indexOutput, conf);
+		writePropertyIds(nextKeyBlockId, keysOutput, conf);
 
 		
 	}

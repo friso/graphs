@@ -14,7 +14,11 @@ public class AscLongDescLongKeyComparator extends WritableComparator {
 		AscLongDescLongWritable k1 = (AscLongDescLongWritable) w1;
 		AscLongDescLongWritable k2 = (AscLongDescLongWritable) w2;
 
-		return k1.getLeft().compareTo(k2.getLeft());
+		int result = k1.getLeft().compareTo(k2.getLeft());
+		if (0 == result) {
+			result = -1 * k1.getRight().compareTo(k2.getRight());
+		}
+		return result;
 	}
 
 }

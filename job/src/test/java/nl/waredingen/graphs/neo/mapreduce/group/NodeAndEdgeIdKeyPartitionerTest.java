@@ -1,9 +1,8 @@
 package nl.waredingen.graphs.neo.mapreduce.group;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
-
-import nl.waredingen.graphs.neo.mapreduce.join.NodeAndEdgeKeyPartitioner;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
@@ -21,14 +20,16 @@ public class NodeAndEdgeIdKeyPartitionerTest {
 		assertThat(partitioner.getPartition(firstKey, new Text(), 50), is(partitioner.getPartition(secondKey, new Text(), 50)));
 
 	}
-	
+
 	@Test
 	public void testNonNegativePartitionForNodeAndEdgeKey() {
 		Text nodeKey = new Text("3663243826;1");
-		
-		NodeAndEdgeKeyPartitioner partitioner = new NodeAndEdgeKeyPartitioner();
+
+		NodeAndEdgeIdKeyPartitioner partitioner = new NodeAndEdgeIdKeyPartitioner();
 		
 		assertTrue(partitioner.getPartition(nodeKey, new Text(), 50) >= 0);
+
 	}
+	
 
 }

@@ -24,7 +24,7 @@ public class JoinNodesAndEdgesReducer extends Reducer<Text, Text, Text, Text> {
 
 		while (iter.hasNext()) {
 			Text value = iter.next();
-			String toNode = value.toString().split("\t")[2];
+			String toNode = value.toString().split("\t", 4)[2];
 			outputKey.set("R"+toNode);
 			outputValue.set(value.toString() + "\t" + node);
 			

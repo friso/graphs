@@ -12,7 +12,7 @@ public class EdgeOutputMapper extends Mapper<LongWritable, Text, LongWritable, T
 	private Text outputValue = new Text();
 
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		String[] vals = value.toString().split("\t");
+		String[] vals = value.toString().split("\t", 12);
 		long node = Long.parseLong(vals[0]);
 		long from = Long.parseLong(vals[2]);
 

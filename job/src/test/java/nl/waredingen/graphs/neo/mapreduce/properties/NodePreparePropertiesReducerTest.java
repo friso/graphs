@@ -45,11 +45,11 @@ public class NodePreparePropertiesReducerTest {
 		assertThat(output.size(), is(3));
 
 		assertThat(output.get(0).getFirst(), equalTo(NullWritable.get()));
-		assertThat(output.get(0).getSecond(), equalTo(new Text("1	3	blah	0	-1	3")));
+		assertThat(output.get(0).getSecond(), equalTo(new Text("1	3	blah	0	3	-1")));
 		assertThat(output.get(1).getFirst(), equalTo(NullWritable.get()));
 		assertThat(output.get(1).getSecond(), equalTo(new Text("1	3	otherblah	0	3	3")));
 		assertThat(output.get(2).getFirst(), equalTo(NullWritable.get()));
-		assertThat(output.get(2).getSecond(), equalTo(new Text("1	3	longblahorsomething	2	3	-1")));
+		assertThat(output.get(2).getSecond(), equalTo(new Text("1	3	longblahorsomething	2	-1	3")));
 
 	}
 	

@@ -20,10 +20,8 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 	public void setValues(LongWritable id, Text value) {
 		this.id = id;
 		this.value = value;
-		if (id.equals(EMPTY_ID) && value.getLength() == 0) {
-			this.count = 0;
-			this.partition = 0;
-		}
+		this.count = 0;
+		this.partition = 0;
 	}
 	
 	public void setCounter(int partition, long count) {

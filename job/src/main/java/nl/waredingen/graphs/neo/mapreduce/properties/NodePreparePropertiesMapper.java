@@ -15,7 +15,8 @@ public class NodePreparePropertiesMapper extends Mapper<LongWritable, Text, AscL
 	private Text outputValue = new Text();
 
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		String[] values = value.toString().split("\t");
+		// TODO choose correct number for 42
+		String[] values = value.toString().split("\t", 42);
 		int nodeId = Integer.parseInt(values[0]);
 		for (int i = 0; i < values.length - 1; i++) {
 			String property = values[i+1];

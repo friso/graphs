@@ -10,7 +10,8 @@ public class GroupNodesAndEdgesReducer extends Reducer<Text, Text, NullWritable,
 
 	private Text outputValue = new Text();
 	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException ,InterruptedException {
-		String outputKey = key.toString().split(";")[0];
+		String keyString = key.toString();
+		String outputKey = keyString.substring(0, keyString.lastIndexOf(";"));
 		for (Text value : values) {
 			outputValue.set(outputKey+"\t"+ value);
 			context.write(NullWritable.get(), outputValue);

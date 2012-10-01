@@ -15,14 +15,16 @@ public class NodeAndEdgeIdKeyComparator extends WritableComparator {
 		Text k1 = (Text) w1;
 		Text k2 = (Text) w2;
 
-		String[] keys1 = k1.toString().split(";");
-		Long edgeId = Long.valueOf(keys1[1]);
-		String[] keys2 = k2.toString().split(";");
-		Long edgeId2 = Long.valueOf(keys2[1]);
+		String k1s = k1.toString();
+		String key1 = k1s.substring(0, k1s.lastIndexOf(";"));
+		Long edgeId = Long.valueOf(k1s.substring(k1s.lastIndexOf(";")+1));
+		String k2s = k2.toString();
+		String key2 = k2s.substring(0, k2s.lastIndexOf(";"));
+		Long edgeId2 = Long.valueOf(k2s.substring(k2s.lastIndexOf(";")+1));
 		
-		int result = keys1[0].compareTo(keys2[0]);
+		int result = key1.compareTo(key2);
 		if (0 == result) {
-			result = -1 * edgeId.compareTo(edgeId2);
+			result = edgeId.compareTo(edgeId2);
 		}
 		return result;
 	}

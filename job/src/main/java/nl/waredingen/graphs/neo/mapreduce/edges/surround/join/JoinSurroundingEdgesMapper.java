@@ -11,7 +11,7 @@ public class JoinSurroundingEdgesMapper extends Mapper<LongWritable, Text, Text,
 	private Text outputKey = new Text();
 	
 	protected void map(LongWritable key, Text value, Context context) throws IOException ,InterruptedException {
-		String[] values = value.toString().split("\t");
+		String[] values = value.toString().split("\t", 5);
 		
 		outputKey.set(values[1]+";"+values[2]+";"+values[3]);
 		context.write(outputKey, value);

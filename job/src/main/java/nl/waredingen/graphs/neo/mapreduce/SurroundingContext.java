@@ -12,7 +12,7 @@ public class SurroundingContext {
 
 	@Override
 	public String toString() {
-		return id + "\t" + other + "\t" + ((from != -1L) ? from + "\t" : "") + ((to != -1L) ? to + "\t" : "") + ((val != null) ? val + "\t" : "") + next + "\t" + prev;
+		return id + "\t" + other + "\t" + ((from != -1L) ? from + "\t" : "") + ((to != -1L) ? to + "\t" : "") + ((val != null) ? val + "\t" : "") + prev + "\t" + next;
 	}
 
 }

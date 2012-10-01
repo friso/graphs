@@ -3,17 +3,14 @@ package nl.waredingen.graphs.neo.mapreduce.nodes;
 import java.io.IOException;
 import java.util.Iterator;
 
-import nl.waredingen.graphs.neo.neo4j.Neo4JUtils;
-
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.neo4j.kernel.impl.nioneo.store.Record;
 
-public class NodeOutputReducer extends Reducer<LongWritable, Text, NullWritable, BytesWritable> {
-	private BytesWritable outputValue = new BytesWritable();
+public class NodeOutputAsTextReducer extends Reducer<LongWritable, Text, NullWritable, Text> {
+	private Text outputValue = new Text();
 
 	protected void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException,
 			InterruptedException {
@@ -36,7 +33,7 @@ public class NodeOutputReducer extends Reducer<LongWritable, Text, NullWritable,
 
 		if (relnum == Long.MAX_VALUE) relnum = -1L;
 		if (propnum == Long.MAX_VALUE) propnum = -1L;
-
+		
 		if (id == 0L) {
 			// write a rootnode once
 			writeNode(id, Record.NO_NEXT_RELATIONSHIP.intValue(), Record.NO_NEXT_PROPERTY.intValue(), context);
@@ -46,8 +43,8 @@ public class NodeOutputReducer extends Reducer<LongWritable, Text, NullWritable,
 	}
 
 	private void writeNode(long id, long relnum, long prop, Context context) throws IOException, InterruptedException {
-		byte[] ba = Neo4JUtils.getNodeAsByteArray(id, relnum, prop);
-		outputValue.set(ba, 0, ba.length);
+		//byte[] ba = Neo4JUtils.getNodeAsByteArray(id, relnum, prop);
+		outputValue.set(id +"\t"+relnum+"\t"+prop);
 		context.write(NullWritable.get(), outputValue);
 	}
 

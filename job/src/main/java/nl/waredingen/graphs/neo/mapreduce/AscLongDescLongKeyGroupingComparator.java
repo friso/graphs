@@ -1,10 +1,12 @@
 package nl.waredingen.graphs.neo.mapreduce;
 
+import nl.waredingen.graphs.neo.mapreduce.input.writables.AscLongDescLongWritable;
+
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 public class AscLongDescLongKeyGroupingComparator extends WritableComparator {
-	protected AscLongDescLongKeyGroupingComparator() {
+	public AscLongDescLongKeyGroupingComparator() {
 		super(AscLongDescLongWritable.class, true);
 	}
 

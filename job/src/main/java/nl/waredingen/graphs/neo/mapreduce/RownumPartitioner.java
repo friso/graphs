@@ -1,5 +1,7 @@
 package nl.waredingen.graphs.neo.mapreduce;
 
+import nl.waredingen.graphs.neo.mapreduce.input.AbstractMetaData;
+
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -25,7 +27,7 @@ public class RownumPartitioner<K, V> extends Partitioner<K, V> implements Config
 	}
 
 	private void configure() {
-		this.max = Long.parseLong(getConf().get(PureMRNodesAndEdgesJob.NUMBEROFROWS_CONFIG));
+		this.max = Long.parseLong(getConf().get(AbstractMetaData.METADATA_NUMBER_OF_NODES));
 	}
 
 	@Override

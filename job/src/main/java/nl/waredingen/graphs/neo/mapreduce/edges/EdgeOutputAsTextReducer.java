@@ -3,9 +3,6 @@ package nl.waredingen.graphs.neo.mapreduce.edges;
 import java.io.IOException;
 import java.util.Iterator;
 
-import nl.waredingen.graphs.neo.neo4j.Neo4JUtils;
-
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;

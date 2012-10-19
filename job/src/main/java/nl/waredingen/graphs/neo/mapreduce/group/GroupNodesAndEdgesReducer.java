@@ -2,18 +2,21 @@ package nl.waredingen.graphs.neo.mapreduce.group;
 
 import java.io.IOException;
 
+import nl.waredingen.graphs.neo.mapreduce.input.writables.EdgeWritable;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.NodeEdgeIdWritable;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.NodeEdgeWritable;
+
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class GroupNodesAndEdgesReducer extends Reducer<Text, Text, NullWritable, Text> {
+public class GroupNodesAndEdgesReducer extends Reducer<NodeEdgeIdWritable, EdgeWritable, NullWritable, NodeEdgeWritable> {
 
-	private Text outputValue = new Text();
-	protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException ,InterruptedException {
-		String keyString = key.toString();
-		String outputKey = keyString.substring(0, keyString.lastIndexOf(";"));
-		for (Text value : values) {
-			outputValue.set(outputKey+"\t"+ value);
+	private NodeEdgeWritable outputValue = new NodeEdgeWritable();
+	
+	@Override
+	protected void reduce(NodeEdgeIdWritable key, Iterable<EdgeWritable> values, Context context) throws IOException ,InterruptedException {
+		for (EdgeWritable value : values) {
+			outputValue.set(key.getNodeId().get(), key.getPropId().get(), value.getEdgeId().get(), value.getFromNodeId().get(), value.getToNodeId().get(), value.getEdgePropId().get());
 			context.write(NullWritable.get(), outputValue);
 		}
 	}

@@ -1,15 +1,15 @@
 package nl.waredingen.graphs.neo.mapreduce.group;
 
-import org.apache.hadoop.io.Text;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.EdgeWritable;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.NodeEdgeIdWritable;
+
 import org.apache.hadoop.mapreduce.Partitioner;
 
-public class NodeAndEdgeIdKeyPartitioner extends Partitioner<Text, Text> {
+public class NodeAndEdgeIdKeyPartitioner extends Partitioner<NodeEdgeIdWritable, EdgeWritable> {
 
 	@Override
-	public int getPartition(Text key, Text val, int numPartitions) {
-		String keyString = key.toString();
-		int hash = keyString.substring(0,keyString.lastIndexOf(";")).hashCode();
-		return (hash & Integer.MAX_VALUE) % numPartitions;
+	public int getPartition(NodeEdgeIdWritable key, EdgeWritable val, int numPartitions) {
+		return (key.getNodeId().hashCode() & Integer.MAX_VALUE) % numPartitions;
 	}
 
 }

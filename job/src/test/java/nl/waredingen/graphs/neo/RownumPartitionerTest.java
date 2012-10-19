@@ -2,9 +2,8 @@ package nl.waredingen.graphs.neo;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-
-import nl.waredingen.graphs.neo.mapreduce.PureMRNodesAndEdgesJob;
-import nl.waredingen.graphs.neo.mapreduce.RownumPartitioner;
+import nl.waredingen.graphs.neo.mapreduce.input.AbstractMetaData;
+import nl.waredingen.graphs.neo.mapreduce.nodes.NodeOutputRownumPartitioner;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -14,11 +13,11 @@ import org.junit.Test;
 
 public class RownumPartitionerTest {
 	private Configuration conf = new Configuration();
-	private RownumPartitioner<LongWritable, Text> partitioner = new RownumPartitioner<LongWritable, Text>();
+	private NodeOutputRownumPartitioner<LongWritable, Text> partitioner = new NodeOutputRownumPartitioner<LongWritable, Text>();
 
 	@Before
 	public void setup() {
-		conf.set(PureMRNodesAndEdgesJob.NUMBEROFROWS_CONFIG, "100");
+		conf.set(AbstractMetaData.METADATA_NUMBER_OF_NODES, "100");
 		partitioner.setConf(conf);
 	}
 	

@@ -4,14 +4,17 @@ import static java.lang.System.arraycopy;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+
+import nl.waredingen.graphs.neo.mapreduce.input.AbstractMetaData;
+import nl.waredingen.graphs.neo.mapreduce.input.HardCodedMetaDataImpl;
+import nl.waredingen.graphs.neo.mapreduce.input.MetaData;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -528,9 +531,10 @@ public class Neo4JUtils {
 		return buffer.array();
 	}
 
-	public static void writePropertyKeyStore(Map<Integer, Entry<String, Class<?>>> namesMap, String output,
-			Configuration conf) throws IOException {
+	public static void writePropertyKeyStore(String output, Configuration conf) throws IOException {
 
+		MetaData metaData = getMetaData(conf);
+		
 		String indexOutput = output + "/neostore.propertystore.db.index";
 		String keysOutput = output + "/neostore.propertystore.db.index.keys";
 
@@ -546,22 +550,20 @@ public class Neo4JUtils {
         buffer.putInt( blockSize );
         kdos.write(buffer.array());
 
-		for (Integer key : namesMap.keySet()) {
-			ByteBuffer indexBuffer = ByteBuffer.allocate(9);
-			indexBuffer.put(Record.IN_USE.byteValue());
-			indexBuffer.putInt(0);
-			indexBuffer.putInt(nextKeyBlockId);
-
-			idos.write(indexBuffer.array());
-			
-			byte[] name = getStringRecordAsByteArray(nextKeyBlockId, namesMap.get(key).getKey().getBytes(), blockSize );
-			nextKeyBlockId += (name.length / blockSize);
-			
-			kdos.write(name, 0, name.length);
-			
-			lastUsedIndexId = key.intValue() +1;
+        for ( String propertyName : metaData.getNodeTypeNames()) {
+		
+			nextKeyBlockId += writePropertyKey(nextKeyBlockId, blockSize, idos, kdos, propertyName);
+			lastUsedIndexId++;
 		}
 
+        for ( String propertyName : metaData.getEdgeTypeNames()) {
+        	// skip from and to
+        	if (!("from".equals(propertyName) || "to".equals(propertyName))) {
+        		nextKeyBlockId += writePropertyKey(nextKeyBlockId, blockSize, idos, kdos, propertyName);
+        		lastUsedIndexId++;
+        	}
+        }
+        
 		String type = PropertyIndexStore.TYPE_DESCRIPTOR + " " + CommonAbstractStore.ALL_STORES_VERSION;
 		byte[] encodedType = UTF8.encode(type);
 		
@@ -586,6 +588,21 @@ public class Neo4JUtils {
 		
 	}
 
+	private static int writePropertyKey(int nextKeyBlockId, int blockSize, FSDataOutputStream idos, FSDataOutputStream kdos, String propertyName)
+			throws IOException {
+		ByteBuffer indexBuffer = ByteBuffer.allocate(9);
+		indexBuffer.put(Record.IN_USE.byteValue());
+		indexBuffer.putInt(0);
+		indexBuffer.putInt(nextKeyBlockId);
+
+		idos.write(indexBuffer.array());
+		
+		byte[] name = getStringRecordAsByteArray(nextKeyBlockId, propertyName.getBytes(), blockSize );
+		
+		kdos.write(name, 0, name.length);
+		return (name.length / blockSize);
+	}
+
 	public static void writePropertyIds(long lastTypeId, String output, Configuration conf) throws IOException {
 		String idsOutput = output + ".id";
 		FileSystem fs = FileSystem.get(conf);
@@ -601,7 +618,6 @@ public class Neo4JUtils {
 	}
 
 	public static void writePropertyStoreFooter(String propertiesOutput, Configuration conf) throws IOException {
-		// TODO Auto-generated method stub
 		FileSystem fs = FileSystem.get(conf);
 		FSDataOutputStream fdos = fs.create(new Path(propertiesOutput + "/neostore.propertystore.db.footer"));
 
@@ -660,9 +676,28 @@ public class Neo4JUtils {
 
 		ados.close();
 		
-		writePropertyIds(42L, propertiesOutput + "/neostore.propertystore.db.arrays", conf);
+		writePropertyIds(0L, propertiesOutput + "/neostore.propertystore.db.arrays", conf);
 		
 		
+	}
+	
+	public static MetaData getMetaData(Configuration conf) {
+		MetaData md = new HardCodedMetaDataImpl(conf);
+		@SuppressWarnings("unchecked")
+		Class<MetaData> mdClass = (Class<MetaData>) conf.getClass(AbstractMetaData.METADATA_CLASS, HardCodedMetaDataImpl.class);
+		try {
+			try {
+				Constructor<MetaData> constructor = mdClass.getConstructor(Configuration.class);
+				md = constructor.newInstance(conf);
+			} catch (NoSuchMethodException nsme) {
+				md = mdClass.newInstance();
+			}
+		} catch (Exception e) {
+			// ignore any exceptions. MetaData's default is already instantiated
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+		return md;
 	}
 
 }

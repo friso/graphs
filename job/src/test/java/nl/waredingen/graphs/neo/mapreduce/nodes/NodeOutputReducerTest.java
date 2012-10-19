@@ -6,29 +6,29 @@ import static org.junit.Assert.assertThat;
 
 import java.util.List;
 
+import nl.waredingen.graphs.neo.mapreduce.input.writables.EdgeIdPropIdWritable;
 import nl.waredingen.graphs.neo.neo4j.Neo4JUtils;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 import org.junit.Before;
 import org.junit.Test;
 
 public class NodeOutputReducerTest {
-	private ReduceDriver<LongWritable, Text, NullWritable, BytesWritable> driver;
+	private ReduceDriver<LongWritable, EdgeIdPropIdWritable, NullWritable, BytesWritable> driver;
 	private List<Pair<NullWritable, BytesWritable>> output;
 
 	@Before
 	public void setUp() throws Exception {
-		driver = new ReduceDriver<LongWritable, Text, NullWritable, BytesWritable>(new NodeOutputReducer());
+		driver = new ReduceDriver<LongWritable, EdgeIdPropIdWritable, NullWritable, BytesWritable>(new NodeOutputReducer());
 	}
 
 	@Test
 	public void shouldOutputAsSomeNode() throws Exception {
-		output = driver.withInputKey(new LongWritable(1)).withInputValue(new Text("3	0")).run();
+		output = driver.withInputKey(new LongWritable(1)).withInputValue(new EdgeIdPropIdWritable(3,0)).run();
 
 		assertThat(output.size(), is(1));
 
@@ -39,7 +39,7 @@ public class NodeOutputReducerTest {
 	
 	@Test
 	public void shouldOutputAsRootAndFirstNode() throws Exception {
-		output = driver.withInputKey(new LongWritable(0)).withInputValue(new Text("3	0")).run();
+		output = driver.withInputKey(new LongWritable(0)).withInputValue(new EdgeIdPropIdWritable(3,0)).run();
 
 		assertThat(output.size(), is(2));
 

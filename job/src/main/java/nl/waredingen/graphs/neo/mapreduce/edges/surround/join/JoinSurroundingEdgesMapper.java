@@ -2,18 +2,21 @@ package nl.waredingen.graphs.neo.mapreduce.edges.surround.join;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.EdgeWritable;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.SurroundingEdgeWritable;
+
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class JoinSurroundingEdgesMapper extends Mapper<LongWritable, Text, Text, Text> {
+public class JoinSurroundingEdgesMapper extends Mapper<NullWritable, SurroundingEdgeWritable, EdgeWritable, SurroundingEdgeWritable> {
 
-	private Text outputKey = new Text();
-	
-	protected void map(LongWritable key, Text value, Context context) throws IOException ,InterruptedException {
-		String[] values = value.toString().split("\t", 5);
-		
-		outputKey.set(values[1]+";"+values[2]+";"+values[3]);
-		context.write(outputKey, value);
+	private EdgeWritable outputKey = new EdgeWritable();
+	private SurroundingEdgeWritable outputValue = new SurroundingEdgeWritable();
+
+	@Override
+	protected void map(NullWritable key, SurroundingEdgeWritable value, Context context) throws IOException, InterruptedException {
+		outputKey.set(value.getEdgeId(), value.getFromNodeId(), value.getToNodeId(), value.getEdgePropId());
+		outputValue.set(value.getNodeId(), value.getEdgeId(), value.getFromNodeId(), value.getToNodeId(), value.getEdgePropId(), value.getEdgePrev(), value.getEdgeNext());
+		context.write(outputKey, outputValue);
 	}
 }

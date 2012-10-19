@@ -1,4 +1,4 @@
-package nl.waredingen.graphs.neo.mapreduce;
+package nl.waredingen.graphs.neo.mapreduce.input.writables;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -88,10 +88,12 @@ public class AscLongDescLongWritable implements WritableComparable {
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
-		return left.toString()+"\t"+right.toString();
+		return "AscLongDescLongWritable [left=" + left + ", right=" + right + "]";
 	}
+	
+
 }
 

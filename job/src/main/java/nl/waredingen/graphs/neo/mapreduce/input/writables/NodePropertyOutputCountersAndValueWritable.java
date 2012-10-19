@@ -1,45 +1,52 @@
-package nl.waredingen.graphs.neo.mapreduce.properties;
+package nl.waredingen.graphs.neo.mapreduce.input.writables;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
-public class PropertyOutputIdBlockcountValueWritable  implements Writable {
+public class NodePropertyOutputCountersAndValueWritable  implements Writable {
 	private LongWritable id;
-	private Text value;
-	private long count;
+	private FullNodePropertiesWritable value;
+	private long countBlockOffset;
+	private long countIdOffset;
 	private int partition;
 	
-	public static final Text EMPTY_STRING = new Text("");
+	public static final FullNodePropertiesWritable EMPTY_VAL = new FullNodePropertiesWritable(-1, null, -1, -1, -1, -1, -1, "");
 	public static final LongWritable EMPTY_ID = new LongWritable(Long.MIN_VALUE);
 	
-	public void setValues(LongWritable id, Text value) {
+	public void setValues(LongWritable id, FullNodePropertiesWritable value) {
 		this.id = id;
 		this.value = value;
-		this.count = 0;
+		this.countBlockOffset = 0;
+		this.countIdOffset = 0;
 		this.partition = 0;
 	}
 	
-	public void setCounter(int partition, long count) {
+	public void setCounter(int partition, long blockCount, long idOffsetCount) {
 		this.id = EMPTY_ID;
-		this.value = EMPTY_STRING;
+		this.value = EMPTY_VAL;
 		this.partition = partition;
-		this.count = count;
+		this.countBlockOffset = blockCount;
+		this.countIdOffset = idOffsetCount;
 	}
 	
-	public long getCount() {
-		return count;
+	public long getBlockOffset() {
+		return countBlockOffset;
 	}
 
+	public long getIdOffset() {
+		return countIdOffset;
+	}
+	
 	public int getPartition() {
 		return partition;
 	}
 	
-	public Text getValue() {
+	public FullNodePropertiesWritable getValue() {
 		return value;
 	}
 	
@@ -51,9 +58,10 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 	public void write(DataOutput out) throws IOException {
 		id.write(out);
 		value.write(out);
-		if (id.equals(EMPTY_ID) && value.getLength() == 0) {
+		if (id.equals(EMPTY_ID)) {
 			out.writeInt(partition);
-			out.writeLong(count);
+			out.writeLong(countBlockOffset);
+			out.writeLong(countIdOffset);
 		}
 	}
 
@@ -64,16 +72,18 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 		}
 		id.readFields(in);
 		if (value == null) {
-			value = new Text();
+			value = new FullNodePropertiesWritable();
 		}
 		value.readFields(in);
 		
-		if (id.equals(EMPTY_ID) && value.getLength() == 0) {
+		if (id.equals(EMPTY_ID)) {
 			partition = in.readInt();
-			count = in.readLong();
+			countBlockOffset = in.readLong();
+			countIdOffset = in.readLong();
 		} else {
 			partition = 0;
-			count = 0;
+			countBlockOffset = 0;
+			countIdOffset = 0;
 		}
 	}
 
@@ -81,13 +91,14 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (count ^ (count >>> 32));
+		result = prime * result + (int) (countBlockOffset ^ (countBlockOffset >>> 32));
+		result = prime * result + (int) (countIdOffset ^ (countIdOffset >>> 32));
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + partition;
 		result = prime * result + ((value == null) ? 0 : value.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -96,8 +107,10 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		PropertyOutputIdBlockcountValueWritable other = (PropertyOutputIdBlockcountValueWritable) obj;
-		if (count != other.count)
+		NodePropertyOutputCountersAndValueWritable other = (NodePropertyOutputCountersAndValueWritable) obj;
+		if (countBlockOffset != other.countBlockOffset)
+			return false;
+		if (countIdOffset != other.countIdOffset)
 			return false;
 		if (id == null) {
 			if (other.id != null)
@@ -116,9 +129,8 @@ public class PropertyOutputIdBlockcountValueWritable  implements Writable {
 
 	@Override
 	public String toString() {
-		return "PropertyOutputIdBlockcountValueWritable [id=" + id + ", value=" + value + ", count=" + count
-				+ ", partition=" + partition + "]";
+		return "NodePropertyOutputCountersAndValueWritable [id=" + id + ", value=" + value + ", countBlockOffset=" + countBlockOffset + ", countIdOffset="
+				+ countIdOffset + ", partition=" + partition + "]";
 	}
 
-	
 }

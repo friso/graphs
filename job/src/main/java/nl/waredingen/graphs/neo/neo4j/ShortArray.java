@@ -614,7 +614,8 @@ public enum ShortArray
         return array.getClass().getComponentType().isPrimitive();
     }
 
-    private final static Map<Class, ShortArray> all = new IdentityHashMap<Class, ShortArray>( values().length * 2 );
+    @SuppressWarnings("rawtypes")
+	private final static Map<Class, ShortArray> all = new IdentityHashMap<Class, ShortArray>( values().length * 2 );
 
     static
     {

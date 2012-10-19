@@ -45,6 +45,7 @@ import org.apache.hadoop.mrunit.types.Pair;
  * @author Jacob Metcalf
  */
 
+@SuppressWarnings("rawtypes")
 public class DualInputMapReduceDriver<KIN1, VIN1, KIN2, VIN2, KMAP extends Comparable, VMAP, KOUT, VOUT> extends
 		MapReduceDriverBase<KIN1, VIN1, KMAP, VMAP, KOUT, VOUT> {
 

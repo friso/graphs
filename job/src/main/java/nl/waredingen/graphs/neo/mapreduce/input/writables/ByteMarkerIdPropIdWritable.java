@@ -1,36 +1,38 @@
-package nl.waredingen.graphs.neo.mapreduce.properties;
+package nl.waredingen.graphs.neo.mapreduce.input.writables;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import nl.waredingen.graphs.neo.mapreduce.AscLongDescLongWritable;
-
 import org.apache.hadoop.io.ByteWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.WritableComparable;
 
 @SuppressWarnings("rawtypes")
-public class ByteMarkerPropertyIdWritable implements WritableComparable {
+public class ByteMarkerIdPropIdWritable implements WritableComparable {
 
 	private ByteWritable marker = new ByteWritable();
 	private LongWritable id = new LongWritable();
+	private IntWritable propId = new IntWritable();
 	
-	public ByteMarkerPropertyIdWritable() {
+	public ByteMarkerIdPropIdWritable() {
 		
 	}
 	
-	public ByteMarkerPropertyIdWritable(ByteWritable marker, LongWritable id) {
+	public ByteMarkerIdPropIdWritable(ByteWritable marker, LongWritable id, IntWritable propId) {
 		this.marker = marker;
 		this.id = id;
+		this.propId = propId;
 	}
 	
 	public void setMarker(ByteWritable marker) {
 		this.marker = marker;
 	}
 	
-	public void setId(LongWritable id) {
+	public void setIds(LongWritable id, IntWritable propId) {
 		this.id = id;
+		this.propId = propId;
 	}
 	
 	public ByteWritable getMarker() {
@@ -41,24 +43,31 @@ public class ByteMarkerPropertyIdWritable implements WritableComparable {
 		return id;
 	}
 	
+	public IntWritable getPropId() {
+		return propId;
+	}
+	
 	@Override
 	public void write(DataOutput out) throws IOException {
 		marker.write(out);
 		id.write(out);
+		propId.write(out);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		marker.readFields(in);
 		id.readFields(in);		
+		propId.readFields(in);		
 	}
 
 	@Override
 	public int compareTo(Object obj) {
-		ByteMarkerPropertyIdWritable other = (ByteMarkerPropertyIdWritable) obj;
+		ByteMarkerIdPropIdWritable other = (ByteMarkerIdPropIdWritable) obj;
 		int markerDiff = marker.compareTo(other.marker);
-		// sort on marker and then on id
-		return (markerDiff == 0) ? id.compareTo(other.id) : markerDiff;
+		int nodeDiff = id.compareTo(other.id);
+		// sort on marker and then on nodeId and propertyId
+		return (markerDiff == 0) ?  (nodeDiff == 0) ? propId.compareTo(other.propId) : nodeDiff: markerDiff;
 	}
 
 	@Override
@@ -66,6 +75,7 @@ public class ByteMarkerPropertyIdWritable implements WritableComparable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((propId == null) ? 0 : propId.hashCode());
 		result = prime * result + ((marker == null) ? 0 : marker.hashCode());
 		return result;
 	}
@@ -78,11 +88,16 @@ public class ByteMarkerPropertyIdWritable implements WritableComparable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ByteMarkerPropertyIdWritable other = (ByteMarkerPropertyIdWritable) obj;
+		ByteMarkerIdPropIdWritable other = (ByteMarkerIdPropIdWritable) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;
 		} else if (!id.equals(other.id))
+			return false;
+		if (propId == null) {
+			if (other.propId != null)
+				return false;
+		} else if (!propId.equals(other.propId))
 			return false;
 		if (marker == null) {
 			if (other.marker != null)
@@ -94,6 +109,7 @@ public class ByteMarkerPropertyIdWritable implements WritableComparable {
 
 	@Override
 	public String toString() {
-		return marker + "\t" + id;
+		return "ByteMarkerIdPropIdWritable [marker=" + marker + ", id=" + id +  ", propId=" + propId + "]";
 	}
+
 }

@@ -41,7 +41,6 @@ public class NewByteBufferOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
 	@Override
 	public RecordWriter<K, V> getRecordWriter(TaskAttemptContext job) throws IOException, InterruptedException {
-		// TODO Auto-generated method stub
 		Configuration conf = job.getConfiguration();
 
 		Path file = getDefaultWorkFile(job, "");

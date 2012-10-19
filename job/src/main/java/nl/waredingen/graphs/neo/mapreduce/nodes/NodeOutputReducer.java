@@ -3,21 +3,22 @@ package nl.waredingen.graphs.neo.mapreduce.nodes;
 import java.io.IOException;
 import java.util.Iterator;
 
+import nl.waredingen.graphs.neo.mapreduce.input.writables.EdgeIdPropIdWritable;
 import nl.waredingen.graphs.neo.neo4j.Neo4JUtils;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.neo4j.kernel.impl.nioneo.store.Record;
 
-public class NodeOutputReducer extends Reducer<LongWritable, Text, NullWritable, BytesWritable> {
+public class NodeOutputReducer extends Reducer<LongWritable, EdgeIdPropIdWritable, NullWritable, BytesWritable> {
 	private BytesWritable outputValue = new BytesWritable();
 
-	protected void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException,
+	@Override
+	protected void reduce(LongWritable key, Iterable<EdgeIdPropIdWritable> values, Context context) throws IOException,
 			InterruptedException {
-		Iterator<Text> itr = values.iterator();
+		Iterator<EdgeIdPropIdWritable> itr = values.iterator();
 		if (!itr.hasNext()) {
 			return;
 		}
@@ -28,10 +29,9 @@ public class NodeOutputReducer extends Reducer<LongWritable, Text, NullWritable,
 		long relnum = Long.MAX_VALUE;
 		long propnum = Long.MAX_VALUE;
 		while (itr.hasNext()) {
-			Text value = itr.next();
-			String[] vals = value.toString().split("\t",2);
-			relnum = Math.min(relnum, Long.parseLong(vals[0]));
-			propnum = Math.min(propnum, Long.parseLong(vals[1]));
+			EdgeIdPropIdWritable value = itr.next();
+			relnum = Math.min(relnum, value.getEdgeId().get());
+			propnum = Math.min(propnum, value.getPropId().get());
 		}
 
 		if (relnum == Long.MAX_VALUE) relnum = -1L;

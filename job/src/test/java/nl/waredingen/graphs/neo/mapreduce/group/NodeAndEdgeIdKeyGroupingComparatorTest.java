@@ -1,17 +1,18 @@
 package nl.waredingen.graphs.neo.mapreduce.group;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
-import org.apache.hadoop.io.Text;
+import nl.waredingen.graphs.neo.mapreduce.input.writables.NodeEdgeIdWritable;
+
 import org.junit.Test;
 
 public class NodeAndEdgeIdKeyGroupingComparatorTest {
 
 	@Test
 	public void shouldEqualNodeKeyAndEdgeKey() {
-		Text firstKey = new Text("0	A	Aname;0");
-		Text secondKey = new Text("0	A	Aname;1");
+		NodeEdgeIdWritable firstKey = new NodeEdgeIdWritable(0,1,0);
+		NodeEdgeIdWritable secondKey = new NodeEdgeIdWritable(0,1,1);
 		
 		NodeAndEdgeIdKeyGroupingComparator comp = new NodeAndEdgeIdKeyGroupingComparator();
 

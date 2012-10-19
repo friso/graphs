@@ -16,7 +16,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 public class RowNumberJob {
 	public final static byte COUNTER_MARKER = (byte) 'T';
@@ -36,7 +36,7 @@ public class RowNumberJob {
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(Text.class);
 			
-			job.setOutputFormatClass(TextOutputFormat.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			FileOutputFormat.setOutputPath(job, new Path(output));
 			
 			job.setInputFormatClass(TextInputFormat.class);

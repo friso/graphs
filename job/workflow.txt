@@ -1,0 +1,98 @@
+1111111111111111111111111111
+First create a nodes and a edges file from the input:
+
+
+hadoop jar target/graphs-0.1-SNAPSHOT-job.jar prepare-bgp ../samples/bgp-sample.txt ./nodes ./edges
+
+This creates:
+cat nodes/part-00000 
+cat edges/part-00000 
+
+222222222222222222222222222
+Add unique rownumbers to them
+
+
+hadoop jar target/graphs-0.1-SNAPSHOT-job.jar rownumbers ./nodes ./nodes-withrows
+
+cat nodes-withrows/part-r-00000 
+
+hadoop jar target/graphs-0.1-SNAPSHOT-job.jar rownumbers ./edges ./edges-withrows
+cat edges-withrows/part-r-00000 
+
+cat edges-withrows/part-r-00000 | awk '{print $2"\t"$3"\t"$1}' > ../samples/edges-with-row.txt
+
+cat nodes-withrows/part-r-00000 | awk '{print $2"\t"$3"\t"$1}' > ../samples/nodes-with-row.txt
+
+cat ../samples/edges-with-row.txt 
+cat ../samples/nodes-with-row.txt 
+
+3333333333333333333333333333
+Do the normal 1 machine import to see that a graph db is created
+
+hadoop jar target/graphs-0.1-SNAPSHOT-job.jar neo4j-import ../samples/nodes-with-row.txt ../samples/edges-with-row.txt ./neodb "name,rownum" "rownum"
+
+
+cp -R neodb ~/dev/neo4j/neo4j-community-1.8.M05/data/graph.db
+
+can inspect the files with hexdump to explain the file format
+hexdump ~/dev/neo4j/neo4j-community-1.8.M05/data/graph.db/neostore.nodestore.db
+hexdump ~/dev/neo4j/neo4j-community-1.8.M05/data/graph.db/neostore.relationshipstore.db
+
+
+
+4444444444444444444444444444
+Explain the file format
+
+Nodes:
+9 byte records with:
+1 byte use flag
+4 byte id of first relationship
+4 byte id of first property
+
+Edges:
+33 byte records with:
+1 byte use flag
+4 byte from node id
+4 byte to node id
+4 byte relationship type
+4 byte from node previous rel id
+4 byte from node next rel id
+4 byte to node previous rel id
+4 byte to node next rel id
+4 byte id of first property
+
+5555555555555555555555555555
+Do the distributed creation of the nodes file
+hadoop jar target/graphs-0.1-SNAPSHOT-job.jar neographnodes ../samples/nodes-with-row.txt ../samples/edges-with-row.txt ./neograph
+hadoop jar target/graphs-0.1-SNAPSHOT-job.jar neographedges ../samples/nodes-with-row.txt ../samples/edges-with-row.txt ./neograph
+
+hexdump ./neograph/neostore.nodestore.db/part-00000
+hexdump ./neograph/neostore.relationshipstore.db/part-00000
+
+
+
+
+
+Steps for NODES
+
+join nodes and edges on id and idfrom
+join nodes and edges on id and idto
+union those two joins
+sort descending on relnum
+grab only the first of every id
+sort by rownum
+create byterecords per node
+
+Steps for EDGES
+join nodes and edges on id and idfrom
+join nodes and edges on id and idto
+union those two joins
+sort descending on relnum
+get out the duplicates on id, from, to and relnum (the selfjoined records)
+sort again on relnum descending (cascading won't let me loopo through the previous sortresult twice)
+get out the next and previous rels if any
+selfjoin on from to relnum to combine all info of a relation
+filter out the duplicates
+filter out the selfjoined ones
+sort on relnum (prepare for output)
+create byterecord per rel

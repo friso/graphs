@@ -175,9 +175,9 @@ public class Neo4jImportJob {
 	}
 
 	private Map<String, String> getConfig() {
-        if (new File("batch.properties").exists()) {
-			return BatchInserterImpl.loadProperties("batch.properties");
-        } else {
+//        if (new File("batch.properties").exists()) {
+//			return BatchInserterImpl.loadProperties("batch.properties");
+//        } else {
             return stringMap(
                     "dump_configuration", "true",
                     "cache_type", "none",
@@ -187,7 +187,7 @@ public class Neo4jImportJob {
                     "neostore.relationshipstore.db.mapped_memory", "1000M",
                     "neostore.propertystore.db.mapped_memory", "1000M",
                     "neostore.propertystore.db.strings.mapped_memory", "100M");
-        }
+//        }
     }
 	
 	private boolean progress() {

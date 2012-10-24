@@ -3,6 +3,9 @@ package nl.waredingen.graphs;
 import nl.waredingen.graphs.bgp.PrepareBgpGraphJob;
 import nl.waredingen.graphs.importer.Neo4jImportJob;
 import nl.waredingen.graphs.misc.RowNumberJob;
+import nl.waredingen.graphs.neo.NeoGraphEdgesJob;
+import nl.waredingen.graphs.neo.NeoGraphNodesJob;
+import nl.waredingen.graphs.neo.mapreduce.PureMRNodesAndEdgesJob;
 import nl.waredingen.graphs.partition.IterateJob;
 import nl.waredingen.graphs.partition.IterateWithFlagsJob;
 import nl.waredingen.graphs.partition.PrepareJob;
@@ -38,7 +41,13 @@ public class Main extends Configured implements Tool {
 		} else if (args[0].equalsIgnoreCase("prepare-bgp")) {
 			return PrepareBgpGraphJob.runJob(args[1], args[2], args[3]);
 		} else if (args[0].equalsIgnoreCase("rownumbers")) {
-			return RowNumberJob.run(args[1], args[2], getConf());
+			return (int) RowNumberJob.run(args[1], args[2], getConf());
+		} else if (args[0].equalsIgnoreCase("neographnodes")) {
+			return NeoGraphNodesJob.runJob(args[1], args[2], args[3]);
+		} else if (args[0].equalsIgnoreCase("neographedges")) {
+			return NeoGraphEdgesJob.runJob(args[1], args[2], args[3]);
+		} else if (args[0].equalsIgnoreCase("neograph")) {
+			return PureMRNodesAndEdgesJob.run(args[1], args[2], args[3], getConf());
 		} else {
 			System.err.println("Wrong arguments!");
 			System.exit(1);

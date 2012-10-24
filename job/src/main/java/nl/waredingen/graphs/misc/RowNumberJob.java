@@ -9,19 +9,20 @@ import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.Task.Counter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 public class RowNumberJob {
 	public final static byte COUNTER_MARKER = (byte) 'T';
 	public final static byte VALUE_MARKER = (byte) 'W';
 	
-	public static int run(String input, String output, Configuration conf) {
+	public static long run(String input, String output, Configuration conf) {
 		try {
 			Job job = new Job(conf, "Row number generator job.");
 			job.setGroupingComparatorClass(IndifferentComparator.class);
@@ -35,7 +36,7 @@ public class RowNumberJob {
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(Text.class);
 			
-			job.setOutputFormatClass(TextOutputFormat.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			FileOutputFormat.setOutputPath(job, new Path(output));
 			
 			job.setInputFormatClass(TextInputFormat.class);
@@ -44,13 +45,13 @@ public class RowNumberJob {
 			job.setJarByClass(RowNumberJob.class);
 			
 			job.waitForCompletion(true);
+			
+			return job.getCounters().findCounter(Counter.REDUCE_OUTPUT_RECORDS).getValue();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace(System.err);
 			return 1;
 		}
-		
-		return 0;
 	}
 	
 	static class RowNumberMapper extends Mapper<LongWritable, Text, ByteWritable, RowNumberWritable> {

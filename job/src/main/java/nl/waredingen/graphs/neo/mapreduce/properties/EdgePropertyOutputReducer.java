@@ -38,7 +38,7 @@ public class EdgePropertyOutputReducer extends Reducer<ByteMarkerIdPropIdWritabl
 		long blockCountOffset = 1;
 		long propCountOffset = metaData.getNumberOfNodeProperties();
 		EdgePropertyOutputCountersAndValueWritable value = itr.next();
-		while (itr.hasNext() && (value.getBlockOffset() > 0 || value.getIdOffset() > 0)) {
+		while (itr.hasNext() && value.getBlockOffset() != -1L && value.getIdOffset() != -1L) {
 			blockCountOffset += value.getBlockOffset();
 			propCountOffset += value.getIdOffset();
 			value = itr.next();

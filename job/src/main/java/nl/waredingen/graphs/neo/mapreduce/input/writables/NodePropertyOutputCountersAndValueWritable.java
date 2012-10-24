@@ -21,9 +21,9 @@ public class NodePropertyOutputCountersAndValueWritable  implements Writable {
 	public void setValues(LongWritable id, FullNodePropertiesWritable value) {
 		this.id = id;
 		this.value = value;
-		this.countBlockOffset = 0;
-		this.countIdOffset = 0;
-		this.partition = 0;
+		this.countBlockOffset = -1L;
+		this.countIdOffset = -1L;
+		this.partition = -1;
 	}
 	
 	public void setCounter(int partition, long blockCount, long idOffsetCount) {
@@ -81,9 +81,9 @@ public class NodePropertyOutputCountersAndValueWritable  implements Writable {
 			countBlockOffset = in.readLong();
 			countIdOffset = in.readLong();
 		} else {
-			partition = 0;
-			countBlockOffset = 0;
-			countIdOffset = 0;
+			partition = -1;
+			countBlockOffset = -1L;
+			countIdOffset = -1L;
 		}
 	}
 

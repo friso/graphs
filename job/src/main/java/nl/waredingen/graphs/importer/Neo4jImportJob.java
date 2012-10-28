@@ -12,12 +12,13 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.index.BatchInserterIndex;
-import org.neo4j.graphdb.index.BatchInserterIndexProvider;
 import org.neo4j.graphdb.index.IndexManager;
-import org.neo4j.index.impl.lucene.LuceneBatchInserterIndexProvider;
-import org.neo4j.kernel.impl.batchinsert.BatchInserter;
-import org.neo4j.kernel.impl.batchinsert.BatchInserterImpl;
+import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.unsafe.batchinsert.BatchInserter;
+import org.neo4j.unsafe.batchinsert.BatchInserterIndex;
+import org.neo4j.unsafe.batchinsert.BatchInserterIndexProvider;
+import org.neo4j.unsafe.batchinsert.BatchInserters;
+import org.neo4j.unsafe.batchinsert.LuceneBatchInserterIndexProvider;
 
 public class Neo4jImportJob {
 	private final static String SPLIT_STRING = "\t";
@@ -58,7 +59,7 @@ public class Neo4jImportJob {
 			}
 			
 			System.out.println("Opening DB and indexes...");
-			db = new BatchInserterImpl(output.getAbsolutePath(), getConfig());
+			db = BatchInserters.inserter(output.getAbsolutePath(), getConfig());
 			
 			BatchInserterIndexProvider provider = new LuceneBatchInserterIndexProvider(db);
 			BatchInserterIndex index = provider.nodeIndex("allnodes", stringMap(
@@ -176,7 +177,7 @@ public class Neo4jImportJob {
 
 	private Map<String, String> getConfig() {
         if (new File("batch.properties").exists()) {
-			return BatchInserterImpl.loadProperties("batch.properties");
+			return MapUtil.loadStrictly(new File("batch.properties"));
         } else {
             return stringMap(
                     "dump_configuration", "true",

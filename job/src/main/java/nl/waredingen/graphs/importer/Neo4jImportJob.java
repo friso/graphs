@@ -22,6 +22,7 @@ import org.neo4j.unsafe.batchinsert.LuceneBatchInserterIndexProvider;
 
 public class Neo4jImportJob {
 	private final static String SPLIT_STRING = "\t";
+//	private final static String SPLIT_STRING = "\001";
 	
 	private static enum ConnectionTypes implements RelationshipType {
 		LINKED_TO;
@@ -78,7 +79,7 @@ public class Neo4jImportJob {
 			long numEdges = importEdges(db, index, fileNodeIdsToNodeIds);
 			System.out.println(" done (" + numEdges + " edges)");
 			
-			System.out.print("Shutting down indexes and DB...");
+			System.out.println("Shutting down indexes and DB...");
 			provider.shutdown();
 			db.shutdown();
 		} catch(Exception e) {
@@ -143,7 +144,7 @@ public class Neo4jImportJob {
 			if (accountNodeIds.containsKey(fromAccountId) && accountNodeIds.containsKey(toAccountId)) {
 				
 				for (int c = 0; c < edgeFields.length; c++) {
-					properties[1 + c * 2] = objectFromProperty(parts[c + 1].trim());
+					properties[1 + c * 2] = objectFromProperty(parts[c + 2].trim());
 				}
 				
 				db.createRelationship(accountNodeIds.get(fromAccountId), accountNodeIds.get(toAccountId), ConnectionTypes.LINKED_TO, map(properties));
@@ -155,8 +156,8 @@ public class Neo4jImportJob {
 		return edgeCount;
 	}
 	
-	private static Pattern fpNumber = Pattern.compile("^[-]?\\d+[\\.]\\d+$");
-	private static Pattern intNumber = Pattern.compile("^[-]?\\d+$");
+	private static Pattern fpNumber = Pattern.compile("^(\\-)?\\d+\\.\\d+$");
+	private static Pattern intNumber = Pattern.compile("^[\\-]?\\d+$");
 	private static Pattern hexNumber = Pattern.compile("^0x[0-9A-Fa-f]+$");
 	
 	private static Object objectFromProperty(String value) {
@@ -169,10 +170,6 @@ public class Neo4jImportJob {
 		} else {
 			return value;
 		}
-	}
-	
-	public static void main(String[] args) {
-		System.out.println(objectFromProperty("1234").getClass());
 	}
 
 	private Map<String, String> getConfig() {

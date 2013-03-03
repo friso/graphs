@@ -4,7 +4,19 @@
 
 	<script language="javascript" type="text/javascript" src="vivagraph.min.js"></script>
 	<script language="javascript" type="text/javascript" src="jquery-1.9.1.min.js"></script>
+	<script language="javascript" type="text/javascript" src="rest-api.js"></script>
 	<script language="javascript" type="text/javascript" src="ui.js"></script>
+
+	<script language="javascript">
+		var ui
+		var restApi
+		function main() {
+			ui = new UI()
+			ui.createUI()
+
+			restAp = new RestApi()
+		}
+	</script>
 </head>
 
 <body onload="main()">

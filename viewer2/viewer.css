@@ -37,9 +37,9 @@ svg {
 
 #log {
 	position: absolute;
+	vertical-align: bottom;
 	left: 0px;
 	bottom: 0px;
-	/*width: 80%;*/
 	height: 1.1em;
 	background-color: #333;
 	color: #0c0;

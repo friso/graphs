@@ -8,13 +8,10 @@
 	<script language="javascript" type="text/javascript" src="ui.js"></script>
 
 	<script language="javascript">
-		var ui
-		var restApi
+		var restApi = new RestApi('http://localhost:7474/db/data')
+		var ui = new UI(restApi)
 		function main() {
-			ui = new UI()
 			ui.createUI()
-
-			restAp = new RestApi()
 		}
 	</script>
 </head>

@@ -42,7 +42,8 @@ function init() {
 	},
 	{
 		widthForEdge: function(edge) {
-			return Math.log(edge.data.count) / 2.7 + 0.6
+			return (edge.data.distance - 0.84) * 20
+			// return Math.log(edge.data.count) / 2.7 + 0.6
 		}
 	})
 }

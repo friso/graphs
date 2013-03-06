@@ -1,7 +1,6 @@
-var graph
-var restApi = new RestApi('http://localhost:7474/db/data')
-
-function UI() {
+function UI(restApi) {
+	var self = this
+	self.restApi = restApi
 
 	function writeLog(message) {
 		$('#log').text(message)
@@ -14,7 +13,7 @@ function UI() {
 
 	function addQuery(query) {
 		writeLog('Running query...')
-		restApi.resultForQuery(query, handleQueryResult)
+		self.restApi.resultForQuery(query, handleQueryResult)
 	}
 
 	function confirmHuge(result) {
@@ -22,7 +21,11 @@ function UI() {
 	}
 
 	function handleQueryResult(result, err) {
-
+		if (err) {
+			console.error(err)
+		} else {
+			console.log(result)
+		}
 	}
 
 	function setupQueryShowHide() {
@@ -64,6 +67,7 @@ function UI() {
 			var keyCode = (event.which ? event.which : event.keyCode);
 			if (keyCode === 10 || keyCode == 13 && event.ctrlKey) {
 				addQuery($('#queryText').val())
+				return false
 			}
 		})
 	}
@@ -77,17 +81,17 @@ function UI() {
 		makeGraph()
 	}
 
-	function makeGraph() {
-		/*var*/ graph = Viva.Graph.graph();
+	function makeGraph(graph) {
+		var graph = Viva.Graph.graph();
 
 		// Construct the graph
-		graph.addNode('anvaka', {url : 'https://secure.gravatar.com/avatar/91bad8ceeec43ae303790f8fe238164b'});
-		graph.addNode('manunt', {url : 'https://secure.gravatar.com/avatar/c81bfc2cf23958504617dd4fada3afa8'});
-		graph.addNode('thlorenz', {url : 'https://secure.gravatar.com/avatar/1c9054d6242bffd5fd25ec652a2b79cc'});
-		graph.addNode('bling', {url : 'https://secure.gravatar.com/avatar/24a5b6e62e9a486743a71e0a0a4f71af'});
-		graph.addNode('diyan', {url : 'https://secure.gravatar.com/avatar/01bce7702975191fdc402565bd1045a8?'});
-		graph.addNode('pocheptsov', {url : 'https://secure.gravatar.com/avatar/13da974fc9716b42f5d62e3c8056c718'});
-		graph.addNode('dimapasko', {url : 'https://secure.gravatar.com/avatar/8e587a4232502a9f1ca14e2810e3c3dd'});
+		graph.addNode('anvaka', {image_url : 'https://secure.gravatar.com/avatar/91bad8ceeec43ae303790f8fe238164b'});
+		graph.addNode('manunt', {image_url : 'https://secure.gravatar.com/avatar/c81bfc2cf23958504617dd4fada3afa8'});
+		graph.addNode('thlorenz', {image_url : 'https://secure.gravatar.com/avatar/1c9054d6242bffd5fd25ec652a2b79cc'});
+		graph.addNode('bling', {image_url : 'https://secure.gravatar.com/avatar/24a5b6e62e9a486743a71e0a0a4f71af'});
+		graph.addNode('diyan', {image_url : 'https://secure.gravatar.com/avatar/01bce7702975191fdc402565bd1045a8?'});
+		graph.addNode('pocheptsov', {image_url : 'https://secure.gravatar.com/avatar/13da974fc9716b42f5d62e3c8056c718'});
+		graph.addNode('dimapasko', {image_url : 'https://secure.gravatar.com/avatar/8e587a4232502a9f1ca14e2810e3c3dd'});
 
 		// graph.addLink('anvaka', 'manunt');
 		// graph.addLink('anvaka', 'thlorenz');
@@ -102,15 +106,30 @@ function UI() {
 		// Set custom nodes appearance
 		var graphics = Viva.Graph.View.svgGraphics();
 		graphics.node(function(node) {
-			   // The function is called every time renderer needs a ui to display node
-			   return Viva.Graph.svg('image')
-					 .attr('width', 24)
-					 .attr('height', 24)
-					 .link(node.data.url); // node.data holds custom object passed to graph.addNode();
+				if (node.data.image_url) {
+					return Viva.Graph.svg('image')
+						.attr('width', 24)
+						.attr('height', 24)
+						.link(node.data.image_url);
+				} else if (node.data.name) {
+					return Viva.Graph.svg('text')
+						.text(node.data.name)
+						.attr('style', 'text-transform: uppercase')
+						.attr('font-size', '16px')
+						.attr('text-anchor', 'middle')
+						.attr('dominant-baseline', 'central')
+				} else {
+					return Viva.Graph.svg('circle').attr('r', 10)
+				}
 			})
 			.placeNode(function(nodeUI, pos){
-				// Shift image to let links go to the center:
-				nodeUI.attr('x', pos.x - 12).attr('y', pos.y - 12);
+				if (nodeUI.tagName == 'image') {
+					nodeUI.attr('x', pos.x - nodeUI.attr('width') / 2).attr('y', pos.y - nodeUI.attr('height') / 2);
+				} else if (nodeUI.tagName == 'circle') {
+					nodeUI.attr('cx', pos.x).attr('cy', pos.y);
+				} else {
+					nodeUI.attr('x', pos.x).attr('y', pos.y);
+				}
 			});
 
 		var layout = Viva.Graph.Layout.forceDirected(graph, {
@@ -126,6 +145,8 @@ function UI() {
 				graphics : graphics,
 				layout : layout
 			});
+
+		self.graph = graph;
 
 		renderer.run();
 	}
